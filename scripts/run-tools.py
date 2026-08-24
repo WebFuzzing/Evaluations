@@ -280,18 +280,7 @@ def getFileNamePrefix(sut,tool,port):
     return sut.name +"__" + tool +"__" + str(port)
 
 
-def getToolEnvs(outputFolder,timeMinutes,host,port,sut):
-
-    apiSchemaFile =  sut.name + "." +sut.schemaformat
-
-    s =  "OUTPUT_FOLDER=\"" + outputFolder + "\" \\\n"
-    s += "TIME_MINUTES="+str(timeMinutes) + " \\\n"
-    s += "HOST=\""+host + "\" \\\n"
-    s += "PORT="+ str(port) + " \\\n"
-    s += "API_SCHEMA_FILE=\""+apiSchemaFile + "\" \\\n"
-    return s
-
-def getDockerToolSetup(testdir,outputFolder):
+def getDockerToolSetup(testdir,outputFolder,timeSeconds,host,port,sut):
      # here we connect on the host... an alternative would be to mount on same network of docker-compose
      # of the SUT... but that would be complicated, and harder for debugging
      s =  " --add-host="+LOCALHOST+":host-gateway \\\n"
@@ -299,6 +288,14 @@ def getDockerToolSetup(testdir,outputFolder):
      s += " -v \""+testdir+"\":"+outputFolder + " \\\n"
      # schemas are mounted in :ro read-only
      s += " -v \"" + WFD_DIR + "/openapi-swagger\":/schemas:ro  \\\n"
+
+     #env variables
+     s += " -e OUTPUT_FOLDER=\"" + outputFolder + "\" \\\n"
+     s += " -e TIME_SECONDS="+str(timeSeconds) + " \\\n"
+     s += " -e HOST=\""+host + "\" \\\n"
+     s += " -e PORT="+ str(port) + " \\\n"
+     s += " -e API_SCHEMA_FILE=\""+sut.name + "." +sut.schemaformat + "\" \\\n"
+
      return s
 
 def getScriptFooter(port,tool,sut, exec_dir, jacoco_dir):
@@ -465,10 +462,10 @@ def createScriptForEvoMaster(sut, port, seed):
     testdir = getTestDir(tool,sut.name,port)
 
     ## start_tool
-    start_tool_command = getToolEnvs(DOCKER_OUTPUT_FOLDER,MAX_TIME_SECONDS,LOCALHOST,port,sut)
+    start_tool_command = ""
     start_tool_command += TIMEOUT_COMMAND + " \\\n"
     start_tool_command += "docker run \\\n"
-    start_tool_command += getDockerToolSetup(testdir,DOCKER_OUTPUT_FOLDER)
+    start_tool_command += getDockerToolSetup(testdir,DOCKER_OUTPUT_FOLDER,MAX_TIME_SECONDS,LOCALHOST,port,sut)
     start_tool_command += " webfuzzing/"+TOOL_NAME_PREFIX+"-evomaster:"+WFC_SB_VERSION + " \\\n"
 #     if sut.auth:
 #         start_tool_command += " --configPath \""+WFD_DIR+"/auth/"+sut.name+"-auth.yaml\" \\\n"

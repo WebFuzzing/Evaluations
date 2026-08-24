@@ -9,5 +9,5 @@ TOOL_NAME_PREFIX=wfd-sb
 
 BASE="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
-docker build -t webfuzzing/TOOL_NAME_PREFIX-aratrl:WFC_SB_VERSION     $BASE/../tools/aratrl
-docker build -t webfuzzing/TOOL_NAME_PREFIX-evomaster:WFC_SB_VERSION  $BASE/../tools/evomaster
+docker build -t webfuzzing/$TOOL_NAME_PREFIX-aratrl:$WFC_SB_VERSION     $BASE/../tools/aratrl
+docker build -t webfuzzing/$TOOL_NAME_PREFIX-evomaster:$WFC_SB_VERSION  $BASE/../tools/evomaster

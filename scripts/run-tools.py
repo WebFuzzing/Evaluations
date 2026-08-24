@@ -7,15 +7,18 @@ import os
 import stat
 import pathlib
 import shutil
-
-# recall sys.argv[0] is the script name
-if len(sys.argv) < 4 or len(sys.argv) > 5 :
-    print("Usage:\n<nameOfScript>.py <dir> <minSeed> <maxSeed> (<tool>,...,<tool>)?")
-    exit(1)
+import math
 
 # TODO info
-WFC_SB_VERSION = 0.0.1
+WFC_SB_VERSION = "0.0.1"
 TOOL_NAME_PREFIX = "wfd-sb"
+LOCALHOST = "host.docker.internal"
+
+
+# recall sys.argv[0] is the script name
+if len(sys.argv) < 5 or len(sys.argv) > 6 :
+    print("Usage:\n<nameOfScript>.py <dir> <minSeed> <maxSeed> <timeMinutes> (<tool>,...,<tool>)?")
+    exit(1)
 
 # When creating a new set of experiments, all needed files will be saved in a folder
 BASE_DIR = os.path.abspath(sys.argv[1])
@@ -27,6 +30,9 @@ MIN_SEED = int(sys.argv[2])
 # Max seed, included. For example, if running min=10 and max=39, each experiment is
 # going to be repeated 30 times, starting from seed 10 to seed 39 (both included).
 MAX_SEED = int(sys.argv[3])
+
+#TODO
+MAX_TIME_MINUTES = int(sys.argv[4])
 
 
 ### main input parameter validation
@@ -44,13 +50,14 @@ BASE_SEED = 10000
 
 SRC_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# 1 hour
-MAX_TIME_SECONDS = 3600
+MAX_TIME_SECONDS = MAX_TIME_MINUTES * 60
+# Add an extra 20%, ie 12m on a 1h run
+TIMEOUT_MINUTES = math.ceil(MAX_TIME_MINUTES * 1.2)
 
 TIMEOUT_BIN = shutil.which("timeout") or shutil.which("gtimeout")
 if TIMEOUT_BIN is None:
     raise Exception("Neither 'timeout' nor 'gtimeout' command found. On macOS, please run: 'brew install coreutils'")
-TIMEOUT_COMMAND = f"\"{TIMEOUT_BIN}\" 90m "
+TIMEOUT_COMMAND = f"\"{TIMEOUT_BIN}\" {TIMEOUT_MINUTES}m "
 
 if not os.path.isdir(BASE_DIR):
     print("creating folder: " + BASE_DIR)
@@ -277,11 +284,11 @@ def getToolEnvs(outputFolder,timeMinutes,host,port,sut):
 
     apiSchemaFile =  sut.name + "." +sut.schemaformat
 
-    s =  "OUTPUT_FOLDER=" + outputFolder + "\\\n"
-    s += "TIME_MINUTES="+str(timeMinutes) + "\\\n"
-    s += "HOST="+host + "\\\n"
-    s += "PORT="+ str(port) + "\\\n"
-    s += "API_SCHEMA_FILE="+apiSchemaFile + "\\\n"
+    s =  "OUTPUT_FOLDER=\"" + outputFolder + "\" \\\n"
+    s += "TIME_MINUTES="+str(timeMinutes) + " \\\n"
+    s += "HOST=\""+host + "\" \\\n"
+    s += "PORT="+ str(port) + " \\\n"
+    s += "API_SCHEMA_FILE=\""+apiSchemaFile + "\" \\\n"
     return s
 
 def getScriptFooter(port,tool,sut, exec_dir, jacoco_dir):
@@ -447,18 +454,20 @@ def createScriptForEvoMaster(sut, port, seed):
     logs = getLogFile("tool",tool,sut.name,port)
     testdir = getTestDir(tool,sut.name,port)
 
-    host = "localhost"
+
 
     ## start_tool
-    start_tool_command = getToolEnvs(testdir,MAX_TIME_SECONDS,host,port,sut)
+    start_tool_command = getToolEnvs(testdir,MAX_TIME_SECONDS,LOCALHOST,port,sut)
     start_tool_command += TIMEOUT_COMMAND + " \\\n"
-    start_tool_command += "docker run webfuzzing/"+TOOL_NAME_PREFIX+"-evomaster:"+WFC_SB_VERSION
+    start_tool_command += "docker run"
+    start_tool_command += " --add-host="+LOCALHOST+":host-gateway"
+    start_tool_command += " webfuzzing/"+TOOL_NAME_PREFIX+"-evomaster:"+WFC_SB_VERSION
 #     if sut.auth:
 #         start_tool_command += " --configPath \""+WFD_DIR+"/auth/"+sut.name+"-auth.yaml\" \\\n"
 #         start_tool_command += " --overrideAuthExternalEndpointURL localhost:" + str(port+2)
 
     start_tool_command += getRedirectLog(logs)
-    start_tool_command += "\n"
+    start_tool_command += "\n\n"
     start_tool_command += getReportTimeout(logs) + "\n\n"
 
     code = (getScriptHead(port, tool, sut, EXEC_ONLINE_DIR)

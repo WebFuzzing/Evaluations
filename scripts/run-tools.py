@@ -13,7 +13,7 @@ import math
 WFC_SB_VERSION = "0.0.1"
 TOOL_NAME_PREFIX = "wfd-sb"
 LOCALHOST = "host.docker.internal"
-
+DOCKER_OUTPUT_FOLDER = "/output"
 
 # recall sys.argv[0] is the script name
 if len(sys.argv) < 5 or len(sys.argv) > 6 :
@@ -291,6 +291,16 @@ def getToolEnvs(outputFolder,timeMinutes,host,port,sut):
     s += "API_SCHEMA_FILE=\""+apiSchemaFile + "\" \\\n"
     return s
 
+def getDockerToolSetup(testdir,outputFolder):
+     # here we connect on the host... an alternative would be to mount on same network of docker-compose
+     # of the SUT... but that would be complicated, and harder for debugging
+     s =  " --add-host="+LOCALHOST+":host-gateway \\\n"
+     # let's make sure we can access the results of the fuzzing session, ie, generated files, if any
+     s += " -v \""+testdir+"\":"+outputFolder + " \\\n"
+     # schemas are mounted in :ro read-only
+     s += " -v \"" + WFD_DIR + "/openapi-swagger\":/schemas:ro  \\\n"
+     return s
+
 def getScriptFooter(port,tool,sut, exec_dir, jacoco_dir):
     s = "\n\n"
 
@@ -454,14 +464,12 @@ def createScriptForEvoMaster(sut, port, seed):
     logs = getLogFile("tool",tool,sut.name,port)
     testdir = getTestDir(tool,sut.name,port)
 
-
-
     ## start_tool
-    start_tool_command = getToolEnvs(testdir,MAX_TIME_SECONDS,LOCALHOST,port,sut)
+    start_tool_command = getToolEnvs(DOCKER_OUTPUT_FOLDER,MAX_TIME_SECONDS,LOCALHOST,port,sut)
     start_tool_command += TIMEOUT_COMMAND + " \\\n"
-    start_tool_command += "docker run"
-    start_tool_command += " --add-host="+LOCALHOST+":host-gateway"
-    start_tool_command += " webfuzzing/"+TOOL_NAME_PREFIX+"-evomaster:"+WFC_SB_VERSION
+    start_tool_command += "docker run \\\n"
+    start_tool_command += getDockerToolSetup(testdir,DOCKER_OUTPUT_FOLDER)
+    start_tool_command += " webfuzzing/"+TOOL_NAME_PREFIX+"-evomaster:"+WFC_SB_VERSION + " \\\n"
 #     if sut.auth:
 #         start_tool_command += " --configPath \""+WFD_DIR+"/auth/"+sut.name+"-auth.yaml\" \\\n"
 #         start_tool_command += " --overrideAuthExternalEndpointURL localhost:" + str(port+2)

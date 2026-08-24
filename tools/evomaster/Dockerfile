@@ -6,7 +6,7 @@ ENTRYPOINT ["/bin/sh", "-c", \
     -jar /evomaster.jar \
     --runningInDocker true \
     --showProgress false \
-    --maxTime ${TIME_MINUTES}m \
+    --maxTime ${TIME_SECONDS}s \
     --schema /schemas/${API_SCHEMA_FILE} \
     --base http://${HOST}:${PORT} \
     --outputFolder ${OUTPUT_FOLDER} \

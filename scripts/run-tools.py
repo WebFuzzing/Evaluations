@@ -13,6 +13,10 @@ if len(sys.argv) < 4 or len(sys.argv) > 5 :
     print("Usage:\n<nameOfScript>.py <dir> <minSeed> <maxSeed> (<tool>,...,<tool>)?")
     exit(1)
 
+# TODO info
+WFC_SB_VERSION = 0.0.1
+TOOL_NAME_PREFIX = "wfd-sb"
+
 # When creating a new set of experiments, all needed files will be saved in a folder
 BASE_DIR = os.path.abspath(sys.argv[1])
 
@@ -256,9 +260,6 @@ def getScriptHead(port,tool,sut, exec_dir):
     s += "AUTH_PORT="+str(port+2) + " \\\n"
     s += "HOST_LOG_DIR=\"" + exec_dir +  "\" \\\n"
     s += "MITM_LOG_FILE=" + getFileNamePrefix(sut,tool,port) + "__minlog.csv \\\n"
-    # s += "TOOL="+tool + " \\\n"
-    # s += "RUN="+str(port) + " \\\n"
-    # s += "JACOCODIR=\"" + exec_dir  + "\" \\\n"
     #  Start SUT with Docker Compose
     s += "docker-compose --project-name "+dockerId(port)+" -f $SUT up --build --force-recreate " + getRedirectLog(getLogFile("sut",tool,sut.name,port)) + "  & \n\n"
 
@@ -271,6 +272,17 @@ def getScriptHead(port,tool,sut, exec_dir):
 def getFileNamePrefix(sut,tool,port):
     return sut.name +"__" + tool +"__" + str(port)
 
+
+def getToolEnvs(outputFolder,timeMinutes,host,port,sut):
+
+    apiSchemaFile =  sut.name + "." +sut.schemaformat
+
+    s =  "OUTPUT_FOLDER=" + outputFolder + "\\\n"
+    s += "TIME_MINUTES="+str(timeMinutes) + "\\\n"
+    s += "HOST="+host + "\\\n"
+    s += "PORT="+ str(port) + "\\\n"
+    s += "API_SCHEMA_FILE="+apiSchemaFile + "\\\n"
+    return s
 
 def getScriptFooter(port,tool,sut, exec_dir, jacoco_dir):
     s = "\n\n"
@@ -435,25 +447,15 @@ def createScriptForEvoMaster(sut, port, seed):
     logs = getLogFile("tool",tool,sut.name,port)
     testdir = getTestDir(tool,sut.name,port)
 
-#     TODO update
+    host = "localhost"
 
     ## start_tool
-    start_tool_command = TIMEOUT_COMMAND + " \\\n"
-    start_tool_command += "java -jar \"" + EVOMASTER_JAR + "\" \\\n"
-    start_tool_command += " --blackBox true  \\\n"
-    start_tool_command += " --maxTime " + str(MAX_TIME_SECONDS) + "s  \\\n"
-    start_tool_command += " --bbSwaggerUrl \"" + WFD_DIR + "/openapi-swagger/" + sut.name + "."+sut.schemaformat + "\"  \\\n"
-    start_tool_command += " --bbTargetUrl http://localhost:" + str(port) + "  \\\n"
-    start_tool_command += " --seed " + str(seed) + " \\\n"
-    start_tool_command += " --showProgress false  \\\n"
-    start_tool_command += " --createConfigPathIfMissing false \\\n"
-    start_tool_command += " --outputFilePrefix test_evomaster \\\n"
-    start_tool_command += " --outputFileSuffix \"_\" \\\n"
-    start_tool_command += " --outputFolder \""+testdir+"\"  \\\n"
-    start_tool_command += " --writeWFCReport true \\\n"
-    if sut.auth:
-        start_tool_command += " --configPath \""+WFD_DIR+"/auth/"+sut.name+"-auth.yaml\" \\\n"
-        start_tool_command += " --overrideAuthExternalEndpointURL localhost:" + str(port+2)
+    start_tool_command = getToolEnvs(testdir,MAX_TIME_SECONDS,host,port,sut)
+    start_tool_command += TIMEOUT_COMMAND + " \\\n"
+    start_tool_command += "docker run webfuzzing/"+TOOL_NAME_PREFIX+"-evomaster:"+WFC_SB_VERSION
+#     if sut.auth:
+#         start_tool_command += " --configPath \""+WFD_DIR+"/auth/"+sut.name+"-auth.yaml\" \\\n"
+#         start_tool_command += " --overrideAuthExternalEndpointURL localhost:" + str(port+2)
 
     start_tool_command += getRedirectLog(logs)
     start_tool_command += "\n"

@@ -18,5 +18,5 @@ ENTRYPOINT ["/bin/sh", "-c", \
      && exec python /ARAT-RL/arat-rl.py \
          /schemas/${API_SCHEMA_FILE} \
          http://${HOST}:${PORT} \
-         ${TIME_MINUTES}" \
+         ${TIME_SECONDS}" \
 ]

@@ -468,10 +468,11 @@ os.makedirs(EXEC_TEST_DIR)
 #
 # tools to use. comment out the ones which should not be used for these experiments
 TOOLS = [
-    Tool("evomaster","evomaster",""),
     Tool("aratrl","aratrl",""),
+    Tool("cats","cats",""),
+    Tool("evomaster","evomaster",""),
     Tool("schemathesis","schemathesis",""),
-    Tool("cats","cats","")
+    Tool("wuppiefuzz","wuppiefuzz","")
 ]
 
 #############################################################################################

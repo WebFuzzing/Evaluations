@@ -13,3 +13,4 @@ docker build -t webfuzzing/$TOOL_NAME_PREFIX-aratrl:$WFC_SB_VERSION        $BASE
 docker build -t webfuzzing/$TOOL_NAME_PREFIX-cats:$WFC_SB_VERSION          $BASE/../tools/cats
 docker build -t webfuzzing/$TOOL_NAME_PREFIX-evomaster:$WFC_SB_VERSION     $BASE/../tools/evomaster
 docker build -t webfuzzing/$TOOL_NAME_PREFIX-schemathesis:$WFC_SB_VERSION  $BASE/../tools/schemathesis
+docker build -t webfuzzing/$TOOL_NAME_PREFIX-wuppiefuzz:$WFC_SB_VERSION    $BASE/../tools/wuppiefuzz

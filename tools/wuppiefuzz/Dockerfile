@@ -1,0 +1,16 @@
+FROM rust:1.98
+
+ARG VERSION=1.6.0
+
+RUN curl --proto '=https' --tlsv1.2 -LsSf https://github.com/TNO-S3/WuppieFuzz/releases/download/v${VERSION}/wuppiefuzz-installer.sh | sh
+
+ENTRYPOINT ["/bin/sh", "-c", \
+    "mkdir -p $OUTPUT_FOLDER \
+     && cd $OUTPUT_FOLDER \
+     && wuppiefuzz fuzz  \
+        ${SCHEMA_FILE_PATH} \
+        --target http://${HOST}:${PORT} \
+        --timeout ${TIME_SECONDS} \
+        ${EXTRA_CONFIGS} \
+    " \
+]

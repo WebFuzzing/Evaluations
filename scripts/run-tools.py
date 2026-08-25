@@ -449,27 +449,6 @@ def createScriptForTool(tool, sut, port, seed):
 
 
 
-# def createScriptForSchemaThesis(sut, port, seed):
-#     tool = SCHEMATHESIS
-#
-#     TODO update
-#     logs = getLogFile("tool",tool,sut.name,port)
-#     testdir = getTestDir(tool,sut.name,port)
-#
-#     start_tool_command = TIMEOUT_COMMAND + " "
-#     start_tool_command += "schemathesis run \\\n"
-#     start_tool_command += " \"" + WFD_DIR + "/openapi-swagger/" + sut.name + "."+sut.schemaformat + "\"  \\\n"
-#     start_tool_command += " --url http://localhost:" + str(port) + "  \\\n"
-#     start_tool_command += getRedirectLog(logs)
-#     start_tool_command += "\n\n"
-#     start_tool_command += getReportTimeout(logs) + "\n\n"
-#
-#     code = (getScriptHead(port, tool, sut, EXEC_ONLINE_DIR)
-#             + start_tool_command
-#             + getScriptFooter(port, tool, sut, EXEC_ONLINE_DIR, JACOCO_ONLINE_DIR))
-#     writeScript(SCRIPT_DIR,code, port, tool, sut)
-
-
 #############################################################################################
 ### Entry point of the script after input validation
 
@@ -490,7 +469,8 @@ os.makedirs(EXEC_TEST_DIR)
 # tools to use. comment out the ones which should not be used for these experiments
 TOOLS = [
     Tool("evomaster","evomaster",""),
-    Tool("aratrl","aratrl","")
+    Tool("aratrl","aratrl",""),
+    Tool("schemathesis","schemathesis","")
 ]
 
 #############################################################################################

@@ -16,7 +16,7 @@ ENTRYPOINT ["/bin/sh", "-c", \
     "mkdir -p $OUTPUT_FOLDER \
      && cd $OUTPUT_FOLDER \
      && exec python /ARAT-RL/arat-rl.py \
-         /schemas/${API_SCHEMA_FILE} \
+         ${SCHEMA_FILE_PATH} \
          http://${HOST}:${PORT} \
          ${TIME_SECONDS}" \
 ]

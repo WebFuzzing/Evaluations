@@ -328,7 +328,7 @@ def getScriptFooter(port,tool_label,sut, exec_dir, jacoco_dir):
     return s
 
 
-def getFileNamePrefix(sut_name,tool,port):
+def getFileNamePrefix(sut_name,tool_label,port):
     return sut_name +"__" + tool_label +"__" + str(port)
 
 
@@ -352,7 +352,7 @@ def getDockerToolSetup(testdir,outputFolder,timeSeconds,host,port,sut,extra_conf
      s += " -e TIME_SECONDS="+str(timeSeconds) + " \\\n"
      s += " -e HOST=\""+host + "\" \\\n"
      s += " -e PORT="+ str(port) + " \\\n"
-     s += " -e API_SCHEMA_FILE_PATH=\"" + schemasFolder + "/" +sut.name + "." +sut.schemaformat + "\" \\\n"
+     s += " -e SCHEMA_FILE_PATH=\"" + schemasFolder + "/" +sut.name + "." +sut.schemaformat + "\" \\\n"
      s += " -e EXTRA_CONFIGS=\"" + extra_config + "\" \\\n"
 
      if sut.auth:
@@ -443,9 +443,9 @@ def createScriptForTool(tool, sut, port, seed):
     command += getReportTimeout(logs) + "\n\n"
 
     code = (getScriptHead(port, tool.label, sut, EXEC_ONLINE_DIR)
-            + start_tool_command
+            + command
             + getScriptFooter(port, tool.label, sut, EXEC_ONLINE_DIR, JACOCO_ONLINE_DIR))
-    writeScript(SCRIPT_DIR,code, port, tool.label, sut)
+    writeScript(SCRIPT_DIR,code, port, tool.label, sut.name)
 
 
 

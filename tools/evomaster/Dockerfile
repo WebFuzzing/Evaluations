@@ -7,9 +7,11 @@ ENTRYPOINT ["/bin/sh", "-c", \
     --runningInDocker true \
     --showProgress false \
     --maxTime ${TIME_SECONDS}s \
-    --schema /schemas/${API_SCHEMA_FILE} \
+    --schema ${API_SCHEMA_FILE_PATH} \
     --base http://${HOST}:${PORT} \
     --outputFolder ${OUTPUT_FOLDER} \
+    ${AUTH_FILE_PATH:+--configPath} ${AUTH_FILE_PATH} \
+    ${EXTRA_CONFIGS} \
     " \
 ]
 

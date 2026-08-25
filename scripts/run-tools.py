@@ -281,20 +281,29 @@ def getFileNamePrefix(sut,tool,port):
 
 
 def getDockerToolSetup(testdir,outputFolder,timeSeconds,host,port,sut):
+
+     schemasFolder = "/schemas"
+     authFolder    = "/auth"
+
      # here we connect on the host... an alternative would be to mount on same network of docker-compose
      # of the SUT... but that would be complicated, and harder for debugging
      s =  " --add-host="+LOCALHOST+":host-gateway \\\n"
      # let's make sure we can access the results of the fuzzing session, ie, generated files, if any
      s += " -v \""+testdir+"\":"+outputFolder + " \\\n"
-     # schemas are mounted in :ro read-only
-     s += " -v \"" + WFD_DIR + "/openapi-swagger\":/schemas:ro  \\\n"
+     # schemas and auth configurations are mounted in :ro read-only
+     s += " -v \"" + WFD_DIR + "/openapi-swagger\":" + schemasFolder + ":ro  \\\n"
+     # FIXME should add :ro after EM fix
+     s += " -v \"" + WFD_DIR + "/auth\":" + authFolder + " \\\n"
 
-     #env variables
+     # env variables
      s += " -e OUTPUT_FOLDER=\"" + outputFolder + "\" \\\n"
      s += " -e TIME_SECONDS="+str(timeSeconds) + " \\\n"
      s += " -e HOST=\""+host + "\" \\\n"
      s += " -e PORT="+ str(port) + " \\\n"
-     s += " -e API_SCHEMA_FILE=\""+sut.name + "." +sut.schemaformat + "\" \\\n"
+     s += " -e API_SCHEMA_FILE_PATH=\"" + schemasFolder + "/" +sut.name + "." +sut.schemaformat + "\" \\\n"
+
+     if sut.auth:
+        s += " -e AUTH_FILE_PATH=\"" + authFolder + "/" + sut.name + "-auth.yaml\" \\\n"
 
      return s
 

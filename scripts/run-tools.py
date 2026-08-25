@@ -67,6 +67,18 @@ else:
     exit(1)
 
 
+class Tool:
+    def __init__(self, name, label, extra_config):
+        # the name of the tool, exactly the same as the folder names in the folder "tools"
+        self.name = name
+        # the label used to identify this tool, usually the same as 'name'.
+        # But can be different when running same tool in different configurations
+        self.label = label
+        # extra configs given to tool, custom and specific to it.
+        # this is to enable experimenting different configurations without need to build any custom Docker image
+        self.extra_config = extra_config
+
+
 class Sut:
     def __init__(self, name, auth, sleep, schemaformat, classfiles):
         self.name = name
@@ -196,11 +208,6 @@ if not os.path.exists(DIST_DIR):
     raise Exception(DIST_DIR + " does not exist. Did you run script/dist.py?")
 
 
-# BB_TOOL_DIR = os.environ.get('BB_TOOL_DIR',"")
-# if not os.path.exists(BB_TOOL_DIR):
-#     raise Exception("You must specify a BB_TOOL_DIR env variable specifying the folder where all the tools to compare are located")
-
-
 
 SCRIPT_DIR = BASE_DIR+"/scripts"
 RESULT_SCRIPT_DIR = BASE_DIR+"/result_scripts"
@@ -214,8 +221,9 @@ JACOCO_TEST_DIR = BASE_DIR+"/jacoco-test"
 EXEC_TEST_DIR = BASE_DIR+"/exec-test"
 
 
-def writeScript(basedir, code, port, tool, sut):
-    script_path = basedir + "/" + tool  + "_" + sut.name + "_" + str(port) + ".sh"
+# Do write on disk the content of 'code' as an executable bash script
+def writeScript(basedir, code, port, tool_label, sut_name):
+    script_path = basedir + "/" + tool_label  + "_" + sut_name + "_" + str(port) + ".sh"
     script = open(script_path, "w")
     script.write(code)
 
@@ -225,6 +233,7 @@ def writeScript(basedir, code, port, tool, sut):
 def dockerId(port):
     return "id"+str(port)
 
+# Custom code to wait for when SUT is up and running, and able to answer to HTTP requests
 def getWaitForSutFunction():
     s  = "wait_for_sut() {\n"
     s += "    local host_port=\"$1\"\n"
@@ -251,7 +260,9 @@ def getWaitForSutFunction():
     s += "}\n\n"
     return s
 
-def getScriptHead(port,tool,sut, exec_dir):
+
+
+def getScriptHead(port,tool_label,sut, exec_dir):
     s = ""
     s += "#!/bin/bash \n\n"
     s += "SUT=\"" + WFD_DIR + "/dockerfiles/"+sut.name+".yaml\" \n"
@@ -266,21 +277,62 @@ def getScriptHead(port,tool,sut, exec_dir):
     s += "JACOCO_PORT="+str(port+1) + " \\\n"
     s += "AUTH_PORT="+str(port+2) + " \\\n"
     s += "HOST_LOG_DIR=\"" + exec_dir +  "\" \\\n"
-    s += "MITM_LOG_FILE=" + getFileNamePrefix(sut,tool,port) + "__minlog.csv \\\n"
+    s += "MITM_LOG_FILE=" + getFileNamePrefix(sut.name,tool_label,port) + "__minlog.csv \\\n"
     #  Start SUT with Docker Compose
-    s += "docker-compose --project-name "+dockerId(port)+" -f $SUT up --build --force-recreate " + getRedirectLog(getLogFile("sut",tool,sut.name,port)) + "  & \n\n"
+    s += "docker-compose --project-name "+dockerId(port) + " -f $SUT up --build --force-recreate " \
+        + getRedirectLog(getLogFile("sut",tool_label,sut.name,port)) + "  & \n\n"
 
     # Wait until HTTP endpoint on target port responds (or timeout)
     s += "wait_for_sut " + str(port) + " " + str(sut.sleep) + "\n\n"
 
     return s
 
+def getScriptFooter(port,tool_label,sut, exec_dir, jacoco_dir):
+    s = "\n\n"
 
-def getFileNamePrefix(sut,tool,port):
-    return sut.name +"__" + tool +"__" + str(port)
+    filename =  getFileNamePrefix(sut.name,tool_label,port) + "__jacoco"
+    execFilePath = "\"" + exec_dir + "/" + filename + ".exec\""
+
+    # FIXME should run JaCoCo in Docker
+    s += "java -jar \"" + DIST_DIR + "/jacococli.jar\" \\\n"
+    s += "  dump  --address localhost --port "+str(port+1)+" \\\n"
+    s += "  --destfile " + execFilePath + "\\\n"
+    s += "  " + getRedirectLog(getLogFile("jacoco-dump",tool_label,sut.name,port)) +"\n"
+    s += "\n"
+    s += "sleep 30\n"
+    s += "\n"
+
+    # once fuzzer is completed, shut down Docker Compose
+    s += "docker-compose -f $SUT down --remove-orphans \n\n"
+
+    s += "# unfortunately, 'down' is not reliable... can leave images and networks up and running\n"
+    s += "sleep 30\n"
+    id = dockerId(port)
+    s += "docker ps -q --filter \"label=com.docker.compose.project="+id+"\" | xargs -r docker stop\n"
+    s += "sleep 30\n"
+    s += "docker network rm "+ id+"_default \n"
+    # this is the name of build images of SUT inside Docker-Compose
+    s += "docker rmi -f "+ id+"-sut-"+sut.name+" \n"
+    s += "\n"
 
 
-def getDockerToolSetup(testdir,outputFolder,timeSeconds,host,port,sut):
+    # FIXME should run JaCoCo in Docker
+    # transform .exec files into readable .csv files.
+    s += "java -jar \"" + DIST_DIR + "/jacococli.jar\" \\\n"
+    s += "  report " + execFilePath+ " \\\n"
+    for path in sut.classfiles:
+        s += "  --classfiles \"" + WFD_DIR + "/" + path + "\" \\\n"
+    s += "  --csv \"" + jacoco_dir + "/" + filename + ".csv\" \\\n"
+    s += "  " + getRedirectLog(getLogFile("jacoco-report",tool_label,sut.name,port)) +"\n"
+
+    return s
+
+
+def getFileNamePrefix(sut_name,tool,port):
+    return sut_name +"__" + tool_label +"__" + str(port)
+
+
+def getDockerToolSetup(testdir,outputFolder,timeSeconds,host,port,sut,extra_config):
 
      schemasFolder = "/schemas"
      authFolder    = "/auth"
@@ -301,61 +353,22 @@ def getDockerToolSetup(testdir,outputFolder,timeSeconds,host,port,sut):
      s += " -e HOST=\""+host + "\" \\\n"
      s += " -e PORT="+ str(port) + " \\\n"
      s += " -e API_SCHEMA_FILE_PATH=\"" + schemasFolder + "/" +sut.name + "." +sut.schemaformat + "\" \\\n"
+     s += " -e EXTRA_CONFIGS=\"" + extra_config + "\" \\\n"
 
      if sut.auth:
         s += " -e AUTH_FILE_PATH=\"" + authFolder + "/" + sut.name + "-auth.yaml\" \\\n"
 
      return s
 
-def getScriptFooter(port,tool,sut, exec_dir, jacoco_dir):
-    s = "\n\n"
 
-    filename =  getFileNamePrefix(sut,tool,port) + "__jacoco"
-    execFilePath = "\"" + exec_dir + "/" + filename + ".exec\""
-
-    s += "java -jar \"" + DIST_DIR + "/jacococli.jar\" \\\n"
-    s += "  dump  --address localhost --port "+str(port+1)+" \\\n"
-    s += "  --destfile " + execFilePath + "\\\n"
-    s += "  " + getRedirectLog(getLogFile("jacoco-dump",tool,sut.name,port)) +"\n"
-    s += "\n"
-    s += "sleep 30\n"
-    s += "\n"
-
-    # once fuzzer is completed, shut down Docker Compose
-    s += "docker-compose -f $SUT down --remove-orphans \n\n"
-
-    s += "# unfortunately, 'down' is not reliable... can leave images and networks up and running\n"
-    s += "sleep 30\n"
-    id = dockerId(port)
-    s += "docker ps -q --filter \"label=com.docker.compose.project="+id+"\" | xargs -r docker stop\n"
-    s += "sleep 30\n"
-    s += "docker network rm "+ id+"_default \n"
-    # this is the name of build images of SUT inside Docker-Compose
-    s += "docker rmi -f "+ id+"-sut-"+sut.name+" \n"
-    s += "\n"
-
-
-
-    # transform .exec files into readable .csv files.
-    s += "java -jar \"" + DIST_DIR + "/jacococli.jar\" \\\n"
-    s += "  report " + execFilePath+ " \\\n"
-    for path in sut.classfiles:
-        s += "  --classfiles \"" + WFD_DIR + "/" + path + "\" \\\n"
-    s += "  --csv \"" + jacoco_dir + "/" + filename + ".csv\" \\\n"
-    s += "  " + getRedirectLog(getLogFile("jacoco-report",tool,sut.name,port)) +"\n"
-
-    return s
-
-
-def getLogFile(label,tool,sutname,port):
-    return pathlib.PurePath(LOGS_DIR + "/"+ tool + "__" +  sutname + "__" + str(port)+"__" +label + ".txt").as_posix()
+def getLogFile(config_label, tool_label, sut_name, port):
+    return pathlib.PurePath(LOGS_DIR + "/"+ tool_label + "__" +  sut_name + "__" + str(port)+"__" +config_label + ".txt").as_posix()
 
 def getRedirectLog(logs):
     return  " >> \""+logs+"\" 2>&1"
 
 
 def createJobs():
-
 
     port = BASE_SEED
     # 1 for SUT,  1 for JaCoCo TCP server and 1 optional for auth server
@@ -368,39 +381,16 @@ def createJobs():
 
         for seed in range(MIN_SEED, MAX_SEED + 1):
 
-            for tool in BB_TOOLS:
+            for tool in TOOLS:
 
-                if tool == EVOMASTER_BB :
-                    createScriptForEvoMaster(sut, port, seed)
-                    createPythonTestRunner(EVOMASTER_BB,sut, port)
-                    port = port + delta
-
-                elif tool == ARAT_RL :
-                    createScriptForARATRL(sut,port,seed)
-                    port = port + delta
-
-                elif tool == SCHEMATHESIS :
-                    createScriptForSchemaThesis(sut,port,seed)
-                    port = port + delta
-
-                else:
-                    print("Not recognized tool: " + tool)
-                    exit(1)
+                createScriptForTool(tool, sut, port, seed)
+                # TODO decide how to handle generated tests, besides Python
+                # createPythonTestRunner(tool,sut, port)
+                port = port + delta
 
 
-
-#############################################################################################
-### Custom code for each tool
-#############################################################################################
-
-EVOMASTER_BB="evomasterbb"
-ARAT_RL="aratrl"
-SCHEMATHESIS="schemathesis"
-
-
-### NOTE: this function MUST be kept in sync between wb-exp.py and bb-exp.py
-def getTestDir(tool,sutname,port):
-    return pathlib.PurePath(TESTS_DIR + "/"+ tool  + "/" + sutname + "/" + str(port)).as_posix()
+def getTestDir(tool_label,sut_name,port):
+    return pathlib.PurePath(TESTS_DIR + "/"+ tool_label  + "/" + sut_name + "/" + str(port)).as_posix()
 
 
 def getReportTimeout(logs):
@@ -411,90 +401,57 @@ def getReportTimeout(logs):
     command += "fi\n"
     return command
 
+
 # Needed to get boot-time coverage
 def createScriptForBase(sut, port):
-    tool = "base"
+    tool_label = "base"
 
-    code = (getScriptHead(port, tool, sut, EXEC_ONLINE_DIR)
+    code = (getScriptHead(port, tool_label, sut, EXEC_ONLINE_DIR)
             # don't run any tool here
-            + getScriptFooter(port, tool, sut, EXEC_ONLINE_DIR, JACOCO_ONLINE_DIR))
-    writeScript(SCRIPT_DIR,code, port, tool, sut)
+            + getScriptFooter(port, tool_label, sut, EXEC_ONLINE_DIR, JACOCO_ONLINE_DIR))
+    writeScript(SCRIPT_DIR,code, port, tool_label, sut.name)
 
 
 def createPythonTestRunner(tool,sut,port):
 
     TEST_RUNNER_LABEL = "tests-"
 
-    testdir = getTestDir(tool,sut.name,port)
-    logs = getLogFile("runningtests",TEST_RUNNER_LABEL+tool,sut.name,port)
+    testdir = getTestDir(tool.label,sut.name,port)
+    logs = getLogFile("runningtests",TEST_RUNNER_LABEL+tool.label,sut.name,port)
 
     command = "py -m pytest \"" + testdir +"\" --junitxml=\"" + testdir +"/test-results.xml\" " +  getRedirectLog(logs)
 
-    code = (getScriptHead(port, TEST_RUNNER_LABEL+tool, sut, EXEC_TEST_DIR)
+    code = (getScriptHead(port, TEST_RUNNER_LABEL+tool.label, sut, EXEC_TEST_DIR)
             + command
-            + getScriptFooter(port, TEST_RUNNER_LABEL+tool, sut, EXEC_TEST_DIR, JACOCO_TEST_DIR))
-    writeScript(RESULT_SCRIPT_DIR,code, port, tool, sut)
+            + getScriptFooter(port, TEST_RUNNER_LABEL+tool.label, sut, EXEC_TEST_DIR, JACOCO_TEST_DIR))
+    writeScript(RESULT_SCRIPT_DIR,code, port, tool.label, sut)
 
 
-def createScriptForARATRL(sut, port, seed):
-    tool = ARAT_RL
+def createScriptForTool(tool, sut, port, seed):
 
-    logs = getLogFile("tool",tool,sut.name,port)
-    testdir = getTestDir(tool,sut.name,port)
+    logs = getLogFile("tool",tool.label,sut.name,port)
+    testdir = getTestDir(tool.label,sut.name,port)
 
-#     TODO update
-#     ## start_tool
-#     start_tool_command = "mkdir -p \"" + testdir + "\" \n"
-#     start_tool_command += "pushd \"" + testdir + "\" \n\n"
-#
-#     start_tool_command += TIMEOUT_COMMAND + " "
-#     start_tool_command += "py \"" + ARAT_RL_LOCATION + "\" \\\n"
-#     start_tool_command += " \"" + WFD_DIR + "/openapi-swagger/" + sut.name + "."+sut.schemaformat + "\"  \\\n"
-#     start_tool_command += " http://localhost:" + str(port) + "  \\\n"
-#     start_tool_command += " " + str(MAX_TIME_SECONDS) + "  \\\n"
-#     start_tool_command += getRedirectLog(logs)
-#     start_tool_command += "\n\n"
-#     start_tool_command += getReportTimeout(logs) + "\n\n"
-#
-#     start_tool_command += "popd \n\n"
-#
-#     code = (getScriptHead(port, tool, sut, EXEC_ONLINE_DIR)
-#             + start_tool_command
-#             + getScriptFooter(port, tool, sut, EXEC_ONLINE_DIR, JACOCO_ONLINE_DIR))
-#     writeScript(SCRIPT_DIR,code, port, tool, sut)
+    ## start tool command
+    command = ""
+    command += TIMEOUT_COMMAND + " \\\n"
+    command += "docker run \\\n"
+    command += getDockerToolSetup(testdir,DOCKER_OUTPUT_FOLDER,MAX_TIME_SECONDS,LOCALHOST,port,sut,tool.extra_config)
+    command += " webfuzzing/"+TOOL_NAME_PREFIX+"-"+tool.name+":"+WFC_SB_VERSION + " \\\n"
+    command += getRedirectLog(logs)
+    command += "\n\n"
+    command += getReportTimeout(logs) + "\n\n"
 
-
-def createScriptForEvoMaster(sut, port, seed):
-    tool = EVOMASTER_BB
-
-    logs = getLogFile("tool",tool,sut.name,port)
-    testdir = getTestDir(tool,sut.name,port)
-
-    ## start_tool
-    start_tool_command = ""
-    start_tool_command += TIMEOUT_COMMAND + " \\\n"
-    start_tool_command += "docker run \\\n"
-    start_tool_command += getDockerToolSetup(testdir,DOCKER_OUTPUT_FOLDER,MAX_TIME_SECONDS,LOCALHOST,port,sut)
-    start_tool_command += " webfuzzing/"+TOOL_NAME_PREFIX+"-evomaster:"+WFC_SB_VERSION + " \\\n"
-#     if sut.auth:
-#         start_tool_command += " --configPath \""+WFD_DIR+"/auth/"+sut.name+"-auth.yaml\" \\\n"
-#         start_tool_command += " --overrideAuthExternalEndpointURL localhost:" + str(port+2)
-
-    start_tool_command += getRedirectLog(logs)
-    start_tool_command += "\n\n"
-    start_tool_command += getReportTimeout(logs) + "\n\n"
-
-    code = (getScriptHead(port, tool, sut, EXEC_ONLINE_DIR)
+    code = (getScriptHead(port, tool.label, sut, EXEC_ONLINE_DIR)
             + start_tool_command
-            + getScriptFooter(port, tool, sut, EXEC_ONLINE_DIR, JACOCO_ONLINE_DIR))
-    writeScript(SCRIPT_DIR,code, port, tool, sut)
+            + getScriptFooter(port, tool.label, sut, EXEC_ONLINE_DIR, JACOCO_ONLINE_DIR))
+    writeScript(SCRIPT_DIR,code, port, tool.label, sut)
 
 
 
-
-def createScriptForSchemaThesis(sut, port, seed):
-    tool = SCHEMATHESIS
-
+# def createScriptForSchemaThesis(sut, port, seed):
+#     tool = SCHEMATHESIS
+#
 #     TODO update
 #     logs = getLogFile("tool",tool,sut.name,port)
 #     testdir = getTestDir(tool,sut.name,port)
@@ -513,9 +470,6 @@ def createScriptForSchemaThesis(sut, port, seed):
 #     writeScript(SCRIPT_DIR,code, port, tool, sut)
 
 
-
-
-### end custom tool code
 #############################################################################################
 ### Entry point of the script after input validation
 
@@ -532,12 +486,11 @@ os.makedirs(EXEC_TEST_DIR)
 
 #############################################################################################
 ### Custom code for experiments
-
+#
 # tools to use. comment out the ones which should not be used for these experiments
-BB_TOOLS = [
-    EVOMASTER_BB,
-#     ARAT_RL,
-#     SCHEMATHESIS,
+TOOLS = [
+    Tool("evomaster","evomaster",""),
+    Tool("aratrl","aratrl","")
 ]
 
 #############################################################################################

@@ -470,7 +470,8 @@ os.makedirs(EXEC_TEST_DIR)
 TOOLS = [
     Tool("evomaster","evomaster",""),
     Tool("aratrl","aratrl",""),
-    Tool("schemathesis","schemathesis","")
+    Tool("schemathesis","schemathesis",""),
+    Tool("cats","cats","")
 ]
 
 #############################################################################################

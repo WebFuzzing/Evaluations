@@ -9,10 +9,25 @@ import pathlib
 import shutil
 import math
 
-# TODO info
-WFC_SB_VERSION = "0.0.1"
-TOOL_NAME_PREFIX = "wfd-sb"
+# The version of Web Fuzzing Evaluations we are using in this study.
+WFE_VERSION = "0.0.1"
+
+
+# WFD must be already installed, with an env pointing to it
+WFD_DIR = os.environ.get('WFD_DIR',"")
+if WFD_DIR == "":
+    raise Exception("You must specify a WFD_DIR env variable specifying the folder where WFD repository was cloned")
+
+DIST_DIR = WFD_DIR + "/dist"
+if not os.path.exists(DIST_DIR):
+    raise Exception(DIST_DIR + " does not exist. Did you run script/dist.py in WFD?")
+
+
+# Prefix use to determine the Docker images of the tools published in WFE
+TOOL_NAME_PREFIX = "wfe"
+# Reference used by tools to connect to "localhost" of the host machine, needed to connect to the SUTs
 LOCALHOST = "host.docker.internal"
+# Folder inside docker images to where the tools should write their results
 DOCKER_OUTPUT_FOLDER = "/output"
 
 # recall sys.argv[0] is the script name
@@ -31,7 +46,7 @@ MIN_SEED = int(sys.argv[2])
 # going to be repeated 30 times, starting from seed 10 to seed 39 (both included).
 MAX_SEED = int(sys.argv[3])
 
-#TODO
+#For how long tools should be run, in minutes. Some extra time is given automatically on top of this.
 MAX_TIME_MINUTES = int(sys.argv[4])
 
 
@@ -98,7 +113,7 @@ SLEEP=180
 YAML="yaml"
 JSON="json"
 
-# To ge the SUTs, you need in EMB to run the script "scripts/dist.py"
+# To ge the SUTs, you need in WFD to run the script "scripts/dist.py"
 SUTS = [
     Sut("bibliothek",False,SLEEP,JSON,["jdk_17_gradle/cs/rest/bibliothek/build/classes"]),
     Sut("blogapi",True, SLEEP,JSON,["jdk_8_maven/cs/rest/original/blogapi/target/classes"]),
@@ -196,17 +211,6 @@ SUTS = [
     Sut("webgoat",True,SLEEP,JSON,["jdk_21_maven/cs/rest-gui/webgoat/target/classes"]),
     Sut("youtube-mock",False,SLEEP,YAML,["jdk_8_maven/cs/rest/original/youtube-mock/target/classes"]),
 ]
-
-
-WFD_DIR = os.environ.get('WFD_DIR',"")
-if WFD_DIR == "":
-    raise Exception("You must specify a WFD_DIR env variable specifying the folder where EMB repository was cloned")
-
-
-DIST_DIR = WFD_DIR + "/dist"
-if not os.path.exists(DIST_DIR):
-    raise Exception(DIST_DIR + " does not exist. Did you run script/dist.py?")
-
 
 
 SCRIPT_DIR = BASE_DIR+"/scripts"

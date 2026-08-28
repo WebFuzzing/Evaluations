@@ -1,0 +1,530 @@
+################################################################################
+## Utility for creating tables in which 2 or more tools are compared.
+##
+## Input data frames (dt) MUST have the columns SUT and TOOL, which are accessed
+## here directly, eg, dt$SUT and dt$TOOL.
+## Any other column must be accessed via input provided lambdas, ie, must NOT
+## be accessed directly by using for example dt$foo.
+## The reason is that data frames might have different structures (eg WB vs BB),
+## while still trying to re-use as much of the same R code as possible.
+################################################################################
+
+
+verifyDataFrame <- function(dt){
+
+  if(! ("SUT" %in% names(dt))){
+    stop("Data frame has no column called SUT")
+  }
+  if(! ("TOOL" %in% names(dt))){
+    stop("Data frame has no column called TOOL")
+  }
+}
+
+
+printAverage <- function(x) {
+    cat(formatC(mean(x), digits = 1, format = "f"))
+}
+
+
+printDiff <- function(
+    x, # an array of data
+    y, # another array of data, possibly of different length
+    lambda # function from vector x to a single value, eg, mean or median
+){
+    diff <- lambda(x) - lambda(y)
+    if(diff > 0){
+      cat("+")
+    }
+    cat(formatC(diff, digits = 1, format = "f"), sep = "")
+}
+
+
+################################################################################
+tableBBSingleConfigVsBase <- function(
+  dt, # the data frame, containing all experiment data
+  resultsLambda, # a lambda(dt,mask) returning an array/list of result values.
+           # could be a column of dt, eg, dt$someResults[mask], or a transformation
+           # involving more than 1 column, eg, cov/tot.
+  projects, #  list of SUT names, to include in the table (in case we want to skip some)
+  bMask,  # boolean array representing a mask over 'dt' representing the "base" configuration
+  xMask,  # boolean array representing a mask over 'dt', to identify all data of configuration X, compared to 'base'
+  tableFileName  # output file name, typically ending with ".tex"
+) {
+
+  TABLE <- paste0(GENERATED_FILES, "/", tableFileName)
+  unlink(TABLE)
+  sink(TABLE, append = TRUE, split = TRUE)
+
+  averages <- matrix(nrow = length(projects), ncol = 2) # B, X
+
+  tryCatch({
+    cat("\\begin{tabular}{ l r|  rrr| r }\\\\ \n")
+    cat("\\toprule \n")
+    cat(" SUT   & $B$ & $min(X) $ & $X$ & $max(X)$  & $X-B$  \\\\ \n", sep = "")
+    cat("\\midrule \n")
+
+    for (i in 1:length(projects)) {
+      proj <- projects[[i]]
+      cat("\\emph{", proj, "}", sep = "")
+      sMask <- dt$SUT == proj
+
+      cat(" & ")
+      B <- resultsLambda(dt, sMask & bMask)
+      printAverage(B)
+      averages[i, 1] <- mean(B)
+
+      X <- resultsLambda(dt, sMask & xMask)
+
+      cat(" & ")
+      cat(formatC(min(X), digits = 1, format = "f"))
+      cat(" & ")
+      printAverage(X)
+      cat(" & ")
+      cat(formatC(max(X), digits = 1, format = "f"))
+
+      cat(" & ")
+      printDiff(X,B,mean)
+      averages[i, 2] <- mean(X)
+
+      cat(" \\\\ \n")
+    }
+
+    printSummaryComparison <- function(data, lambda) {
+        B <- data[, 1]
+        X <- data[, 2]
+
+        cat(" & ")
+        cat(formatC(lambda(B), digits = 1, format = "f"), sep = "")
+        cat(" & ")
+        # min
+        cat(" & ")
+        cat(formatC(lambda(X), digits = 1, format = "f"), sep = "")
+        cat(" & ")
+        # max
+        cat(" & ")
+        printDiff(X,B,lambda)
+    }
+
+    cat("\\midrule \n")
+    cat("Mean ")
+    printSummaryComparison(averages, mean)
+    cat(" \\\\ \n")
+
+    cat("Median ")
+    printSummaryComparison(averages, median)
+    cat(" \\\\ \n")
+
+    cat("\\bottomrule \n")
+    cat("\\end{tabular} \n")
+
+  }, finally = {
+    sink()
+  })
+}
+
+
+
+
+################################################################
+tableBBTwoConfigs <- function(
+  dt, # the data frame, containing all experiment data. besides X and Y, it requires data for "base" tool
+  resultsLambda, # a lambda(dt,mask) returning an array/list of result values.
+           # could be a column of dt, eg, dt$someResults[mask], or a transformation
+           # involving more than 1 column, eg, cov/tot.
+  projects, #  list of SUT names, to include in the table (in case we want to skip some)
+  bMask,  # boolean array representing a mask over 'dt' representing the "base" configuration
+  xMask,  # boolean array representing a mask over 'dt', to identify all data of configuration X, used as reference
+  yMask,  # same as yMask, but for new configuration Y compared to existing reference X
+  tableFileName  # output file name, typically ending with ".tex"
+) {
+
+  TABLE <- paste0(GENERATED_FILES, "/", tableFileName)
+  unlink(TABLE)
+  sink(TABLE, append = TRUE, split = TRUE)
+
+  printComparisonAndGetA12 <- function(other,base) {
+
+    cat(" & ")
+    printDiff(other,base,mean)
+
+    A <- measureA(other, base)
+
+    if (length(other) == 0 | length(base) == 0)
+      p <- 1
+    else {
+      w <- wilcox.test(other, base)
+      p <- w$p.value
+    }
+    significant <- FALSE
+
+    if (is.nan(p)) {
+      p <- "1.000"
+    } else if (p < 0.001) {
+      significant <- TRUE
+      p <- "$< 0.001$"
+    } else {
+      if (p <= 0.05) {
+        significant <- TRUE
+      }
+      p <- formatC(p, digits = 3, format = "f")
+    }
+
+    cat(" & ")
+    if (significant)
+      cat("{\\bf ", sep = "")
+    cat(formatC(A, digits = 2, format = "f"), sep = "")
+    if (significant)
+      cat("}", sep = "")
+
+    cat(" & ")
+    cat(p)
+    return(A)
+  }
+
+  printSummaryComparison <- function(data, lambda) {
+    B <- data[, 1]
+    X <- data[, 2]
+    Y <- data[, 3]
+    A <- data[, 4]
+
+    cat(" & ")
+    cat(formatC(lambda(B), digits = 1, format = "f"), sep = "")
+    cat(" & ")
+    cat(formatC(lambda(X), digits = 1, format = "f"), sep = "")
+    cat(" & ")
+    printDiff(X,B,lambda)
+    cat(" & ")
+    cat(formatC(lambda(Y), digits = 1, format = "f"), sep = "")
+    cat(" & ")
+    printDiff(Y,B,lambda)
+    cat(" & ")
+    printDiff(X,Y,lambda)
+    cat(" & ")
+    cat(formatC(lambda(A), digits = 2, format = "f"), sep = "")
+    cat(" & ") # no pvalue
+  }
+
+
+  averages <- matrix(nrow = length(projects), ncol = 4) # B, X, Y, A
+
+  tryCatch({
+    cat("\\begin{tabular}{ l r|  rr|  rr| rrr}\\\\ \n")
+    cat("\\toprule \n")
+    cat(" SUT   & $B$ & $X$ & $X-B$ & $Y$  & $Y-B$ &  $X-Y$  & $\\hat{A}_{XY}$ & p-value  \\\\ \n", sep = "")
+    cat("\\midrule \n")
+
+
+    for (i in 1:length(projects)) {
+      proj <- projects[[i]]
+      cat("\\emph{", proj, "}", sep = "")
+      sMask <- dt$SUT == proj
+
+      cat(" & ")
+      B <- resultsLambda(dt, sMask & bMask)
+      printAverage(B)
+      averages[i, 1] <- mean(B)
+
+      X <- resultsLambda(dt, sMask & xMask)
+      cat(" & ")
+      printAverage(X)
+      cat(" & ")
+      printDiff(X,B,mean)
+      averages[i, 2] <- mean(X)
+
+      Y <- resultsLambda(dt, sMask & yMask)
+      cat(" & ")
+      printAverage(Y)
+      cat(" & ")
+      printDiff(Y,B,mean)
+      averages[i, 3] <- mean(Y)
+
+      A <- printComparisonAndGetA12(X, Y)
+      averages[i, 4] <- A
+
+      cat(" \\\\ \n")
+    }
+
+    cat("\\midrule \n")
+    cat("Mean ")
+    printSummaryComparison(averages, mean)
+    cat(" \\\\ \n")
+
+    cat("Median ")
+    printSummaryComparison(averages, median)
+    cat(" \\\\ \n")
+
+    cat("\\bottomrule \n")
+    cat("\\end{tabular} \n")
+
+  }, finally = {
+    sink()
+  })
+}
+
+
+
+################################################################
+toolLabel <- function(id){
+    return(paste0("\\",id))
+}
+
+toolsSortedWithFixedFirst <- function(dt, first){
+  unsortedTools <- unique(dt$TOOL)
+  if ( !(first %in% unsortedTools)){
+    stop(paste0("Not recognized tool: ",first))
+  }
+  tools <- c(first, sort(setdiff(unsortedTools, first)))
+  return(tools)
+}
+
+################################################################
+tableManyConfigs <- function(
+  dt, # the data frame, containing all experiment data.
+  resultsLambda, # a lambda(dt,mask) returning an array/list of result values.
+           # could be a column of dt, eg, dt$someResults[mask], or a transformation
+           # involving more than 1 column, eg, cov/tot.
+  tableFileName,  # output file name, typically ending with ".tex"
+  suts = NULL, #  list of SUT names, to include in the table (in case we want to skip some). if NULL, take all
+  tools = NULL # list of tool names to include. if NULL, take all
+) {
+
+  verifyDataFrame(dt)
+
+  allSuts <-  sort(unique(dt$SUT))
+  if(is.null(suts)){
+    suts <- allSuts
+  } else {
+    errors <- setdiff(suts, allSuts)
+    if(length(errors) > 0){
+      stop("Unrecognized SUT names: ", toString(errors))
+    }
+  }
+
+  allTools <- sort(unique(dt$TOOL))
+  if(is.null(tools)){
+    tools <- allTools
+  } else {
+    errors <- setdiff(tools, allTools)
+    if(length(errors) > 0){
+      stop("Unrecognized TOOL names: ", toString(errors))
+    }
+  }
+
+  TABLE <- paste(GENERATED_FILES, "/", tableFileName, sep = "")
+  unlink(TABLE)
+  sink(TABLE, append = TRUE, split = TRUE)
+
+  tryCatch({
+    cat("\\begin{tabular}{ l ",paste(rep("r ", length(tools)),collapse = '' ), "  }\\\\ \n")
+    cat("\\toprule \n")
+
+    z <- function(x){return(paste(" & ", toolLabel(tools[x])))}
+    cat("SUT ", paste(lapply(1:length(tools), z), collapse = '')," \\\\ \n", sep = "")
+
+    avgs <- matrix(nrow = length(suts), ncol = length(tools))
+    ranks <- matrix(nrow = length(suts), ncol = length(tools))
+
+    cat("\\midrule \n")
+
+    for (j in 1:length(suts)) {
+        sut <- suts[[j]]
+
+        cat("\\emph{", sut, "}", sep = "")
+
+        data <- vector(mode="list", length=length(tools))
+
+        for (i in 1:length(tools)){
+            t <- tools[i]
+            cov <- resultsLambda(dt, dt$SUT==sut & dt$TOOL==t)
+            data[[i]] <- cov
+            avgs[j,i] <- mean(cov)
+        }
+
+        ranks[j,] <- rank(-avgs[j,])
+
+        for (i in 1:length(tools)){
+            cov <- data[[i]]
+            a <- mean(cov)
+
+            cat(" & ")
+            if (a == max(avgs[j,])){
+                cat("{\\bf ")
+            }
+
+            cat(formatC(a, digits = 1, format = "f"))
+            ### [min,max] might be too much
+            #       cat(" [",formatC(min(cov), digits = 1, format = "f"), sep = "")
+            #       cat(",", formatC(max(cov), digits = 1, format = "f"), sep = "")
+            #       cat("]")
+            r <- ranks[j,i]
+            cat(" (",formatC(r, digits = 1, format = "f"),")",sep="")
+
+            if (a == max(avgs[j,])){
+                cat("}")
+            }
+        }
+        cat(" \\\\ \n")
+    }
+
+    cat("\\midrule \n")
+
+    printSummaryComparison <- function(lambda, tools, avgs, ranks){
+      for (i in 1:length(tools)){
+        cat(" & ")
+        cat(formatC(lambda(avgs[,i]), digits = 1, format = "f"))
+        cat(" (",formatC(lambda(ranks[,i]), digits = 1, format = "f"),")",sep="")
+      }
+    }
+
+    cat("Average ")
+    printSummaryComparison(mean,tools,avgs,ranks)
+    cat(" \\\\ \n")
+    cat("Median ")
+    printSummaryComparison(median,tools,avgs,ranks)
+    cat(" \\\\ \n")
+
+    fr <- friedman.test(ranks)
+    csr <- formatC(fr$statistic, digits = 3, format = 'f')
+    p <- fr$p.value
+    if (is.nan(p)) {
+          p <- "1.000"
+    } else if (p < 0.001) {
+          p <- "$< 0.001$"
+    } else {
+          p <- formatC(p, digits = 3, format = "f")
+    }
+
+    fresult <- paste0("$\\chi^2$ = ", csr, ", $p$-value = ", p)
+    cat("\\midrule \n")
+    cat("Friedman Test & \\multicolumn{",length(tools),"}{r}{",fresult," }", sep = "")
+    cat(" \\\\ \n")
+    cat("\\bottomrule \n")
+    cat("\\end{tabular} \n")
+
+  }, finally = {
+      sink()
+  })
+}
+
+
+#############################################################################
+# This table is needed when we have many compared TOOLs, and showing results
+# SUT by SUT would take too much space.
+# Instead, each row is per TOOL, with average results over all SUTs.
+# But, as now we have more space for columns, we can consider more than 1 metric.
+# We use 3: X, Y and Z. These are specified via lambdas.
+# A fourth column is then used to show average ranks over these 3 metrics.
+# Best results (ie lowest ranks) are highlighted.
+tableToolSummary <- function(
+  dt, # the data frame, containing all experiment data.
+  toolLabel, # the label used for the TOOL column
+  xName, # the label used for the X data column
+  xLambda, # a lambda(dt,mask) returning an array/list of result values for X.
+  yName, # the label used for the Y data column
+  yLambda, # a lambda(dt,mask) returning an array/list of result values for Y.
+  zName, # the label used for the Z data column
+  zLambda, # a lambda(dt,mask) returning an array/list of result values for Z.
+  tableFileName  # output file name, typically ending with ".tex"
+) {
+
+  verifyDataFrame(dt)
+
+  suts <-  sort(unique(dt$SUT))
+  tools <- sort(unique(dt$TOOL))
+
+  TABLE <- paste0(GENERATED_FILES, "/", tableFileName)
+  unlink(TABLE)
+  sink(TABLE, append = TRUE, split = TRUE)
+
+  tryCatch({
+    cat("\\begin{tabular}{ l rrrr", "  }\\\\ \n")
+    cat("\\toprule \n")
+
+    cat(toolLabel," & ", xName," & ", yName," & ", zName," & Overall \\\\ \n", sep = "")
+
+    avgsX <- matrix(nrow = length(suts), ncol = length(tools))
+    ranksX <- matrix(nrow = length(suts), ncol = length(tools))
+    avgsY <- matrix(nrow = length(suts), ncol = length(tools))
+    ranksY <- matrix(nrow = length(suts), ncol = length(tools))
+    avgsZ <- matrix(nrow = length(suts), ncol = length(tools))
+    ranksZ <- matrix(nrow = length(suts), ncol = length(tools))
+
+    cat("\\midrule \n")
+
+    for (j in 1:length(suts)) {
+      sut <- suts[[j]]
+
+      for (i in 1:length(tools)){
+        t <- tools[i]
+        mask <- dt$SUT==sut & dt$TOOL==t
+
+        avgsX[j,i] <- mean(xLambda(dt, mask))
+        avgsY[j,i] <- mean(yLambda(dt, mask))
+        avgsZ[j,i] <- mean(zLambda(dt, mask))
+      }
+
+      ranksX[j,] <- rank(-avgsX[j,])
+      ranksY[j,] <- rank(-avgsY[j,])
+      ranksZ[j,] <- rank(-avgsZ[j,])
+    }
+
+    bestRX <- min(colMeans(ranksX))
+    bestRY <- min(colMeans(ranksY))
+    bestRZ <- min(colMeans(ranksZ))
+
+    overall <- (colMeans(ranksX) + colMeans(ranksY) + colMeans(ranksZ)) / 3
+    bestOverall <- min(overall)
+
+    for (i in 1:length(tools)){
+      cat("\\emph{", tools[i], "}", sep = "")
+
+      x <- mean(avgsX[,i])
+      y <- mean(avgsY[,i])
+      z <- mean(avgsZ[,i])
+      rX <- mean(ranksX[,i])
+      rY <- mean(ranksY[,i])
+      rZ <- mean(ranksZ[,i])
+
+      mark <- "\\cellcolor{gray!30} "
+
+      cat(" & ")
+      if(rX == bestRX){
+        cat(mark)
+      }
+      cat(formatC(x, digits = 1, format = "f"))
+      cat(" (",formatC(rX, digits = 1, format = "f"),")",sep="")
+
+      cat(" & ")
+      if(rY == bestRY){
+        cat(mark)
+      }
+      cat(formatC(y, digits = 1, format = "f"))
+      cat(" (",formatC(rY, digits = 1, format = "f"),")",sep="")
+
+      cat(" & ")
+      if(rZ == bestRZ){
+        cat(mark)
+      }
+      cat(formatC(z, digits = 1, format = "f"))
+      cat(" (",formatC(rZ, digits = 1, format = "f"),")",sep="")
+
+      cat(" & ")
+      #best <- mean(rX,rY,rZ)
+      best <- overall[i]
+      if(best == bestOverall){
+        cat(mark)
+      }
+      cat(formatC(best, digits = 1, format = "f"))
+
+      cat(" \\\\ \n")
+    }
+
+
+    cat("\\bottomrule \n")
+    cat("\\end{tabular} \n")
+
+  }, finally = {
+    sink()
+  })
+
+}

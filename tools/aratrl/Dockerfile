@@ -18,5 +18,6 @@ ENTRYPOINT ["/bin/sh", "-c", \
      && exec python /ARAT-RL/arat-rl.py \
          ${SCHEMA_FILE_PATH} \
          http://${HOST}:${PORT} \
-         ${TIME_SECONDS}" \
+         ${TIME_SECONDS} \
+         ${EXTRA_CONFIGS}" \
 ]

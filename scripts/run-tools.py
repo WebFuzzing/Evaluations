@@ -471,6 +471,7 @@ TOOLS = [
     Tool("aratrl","aratrl",""),
     Tool("cats","cats",""),
     Tool("evomaster","evomaster",""),
+    Tool("restler","restler",""),
     Tool("schemathesis","schemathesis",""),
     Tool("wuppiefuzz","wuppiefuzz","")
 ]
@@ -478,4 +479,3 @@ TOOLS = [
 #############################################################################################
 # main entry point: create all jobs
 createJobs()
-

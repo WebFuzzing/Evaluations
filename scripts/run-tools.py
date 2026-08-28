@@ -357,6 +357,7 @@ def getDockerToolSetup(testdir,outputFolder,timeSeconds,host,port,sut,extra_conf
 
      if sut.auth:
         s += " -e AUTH_FILE_PATH=\"" + authFolder + "/" + sut.name + "-auth.yaml\" \\\n"
+        s += " -e AUTH_EXTERNAL_OVERRIDE=\""+host+":"+str(port+2)  + "\" \\\n"
 
      return s
 

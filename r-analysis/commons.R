@@ -7,7 +7,8 @@ RESULT_DIR_OUT <- "../results"
 # specify in which folder to search for experiment result files
 RESULT_DIR_IN <- RESULT_DIR_OUT
 
-
+# List of SUTs expected to be used in WFD.
+# This is needed to check if for any reasons some data is missing.
 SUTS <- sort(c(
   "bibliothek",
   "blogapi",
@@ -75,9 +76,9 @@ measureA <- function(a, b) {
 areInTheSubset <- function(x,y){
 
   ### first consider vector with all FALSE
-  result = x!=x
+  result <- x!=x
   for(k in y){
-    result = result | x==k
+    result <- result | x==k
   }
   return(result)
 }

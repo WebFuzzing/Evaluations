@@ -268,6 +268,7 @@ all <- function() {
 
   notests <- dt[dt$TOOL != paste0("tests-", EVOMASTER_BB), ]
 
+  # TODO need Markdown outputs
   tableManyConfigs(notests,covered2xx, suts,"comparisonAll2xx.tex")
   tableManyConfigs(notests,covered500, suts,"comparisonAll500.tex")
 }

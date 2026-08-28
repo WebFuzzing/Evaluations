@@ -114,25 +114,25 @@ all <- function() {
 
   notests <- dt[dt$TOOL != testEvoLabel, ]
 
-  tableManyConfigs(notests,resultsLambda, suts,"comparisonAllJaCoCo.tex")
+  tableManyConfigs(notests,resultsLambda,"comparisonAllJaCoCo.tex", suts)
 
 
-  bMask <- dt$TOOL == "base"
-  evoMask <- dt$TOOL == EVOMASTER_BB
-  testMask <- dt$TOOL == testEvoLabel
-  stMask <- dt$TOOL == SCHEMATHESIS
-
-  tableBBTwoConfigs(dt, resultsLambda, suts,
-    bMask,  # boolean array representing a mask over 'dt' representing the "base" configuration
-    evoMask,  # boolean array representing a mask over 'dt', to identify all data of configuration X, used as reference
-    testMask,  # same as yMask, but for new configuration Y compared to existing reference X
-    "pairComparisonTests.tex"  # output file name, typically ending with ".tex"
-  )
-
-  tableBBTwoConfigs(dt, resultsLambda, suts,
-                    bMask,  # boolean array representing a mask over 'dt' representing the "base" configuration
-                    evoMask,  # boolean array representing a mask over 'dt', to identify all data of configuration X, used as reference
-                    stMask,  # same as yMask, but for new configuration Y compared to existing reference X
-                    "pairComparisonSchemathesis.tex"  # output file name, typically ending with ".tex"
-  )
+  # bMask <- dt$TOOL == "base"
+  # evoMask <- dt$TOOL == EVOMASTER_BB
+  # testMask <- dt$TOOL == testEvoLabel
+  # stMask <- dt$TOOL == SCHEMATHESIS
+  #
+  # tableBBTwoConfigs(dt, resultsLambda, suts,
+  #   bMask,  # boolean array representing a mask over 'dt' representing the "base" configuration
+  #   evoMask,  # boolean array representing a mask over 'dt', to identify all data of configuration X, used as reference
+  #   testMask,  # same as yMask, but for new configuration Y compared to existing reference X
+  #   "pairComparisonTests.tex"  # output file name, typically ending with ".tex"
+  # )
+  #
+  # tableBBTwoConfigs(dt, resultsLambda, suts,
+  #                   bMask,  # boolean array representing a mask over 'dt' representing the "base" configuration
+  #                   evoMask,  # boolean array representing a mask over 'dt', to identify all data of configuration X, used as reference
+  #                   stMask,  # same as yMask, but for new configuration Y compared to existing reference X
+  #                   "pairComparisonSchemathesis.tex"  # output file name, typically ending with ".tex"
+  # )
 }

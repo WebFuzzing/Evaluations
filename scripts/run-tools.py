@@ -370,7 +370,9 @@ def getLogFile(config_label, tool_label, sut_name, port):
     return pathlib.PurePath(LOGS_DIR + "/"+ tool_label + "__" +  sut_name + "__" + str(port)+"__" +config_label + ".txt").as_posix()
 
 def getRedirectLog(logs):
-    return  " >> \""+logs+"\" 2>&1"
+    # no point in generating full logs, as for debugging we just interested in the last bits before any crash.
+    # needed to use "tail" because otherwise 10s of GBs of data can be generated!!!
+    return  " | tail -n 1000 >> \""+logs+"\" 2>&1"
 
 
 def createJobs():

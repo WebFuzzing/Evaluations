@@ -17,6 +17,7 @@ ENTRYPOINT ["/bin/sh", "-c", \
     "java  \
     -jar /cats.jar \
     --blackbox \
+    --reportFormat JUNIT \
     --contract ${SCHEMA_FILE_PATH} \
     --server http://${HOST}:${PORT} \
     --output ${OUTPUT_FOLDER} \

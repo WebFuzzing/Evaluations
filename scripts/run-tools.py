@@ -440,9 +440,9 @@ def createScriptForTool(tool, sut, port, seed):
     ## start tool command
     command = ""
     command += TIMEOUT_COMMAND + " \\\n"
-    command += "docker run \\\n"
+    command += "docker run --rm \\\n"
     command += getDockerToolSetup(testdir,DOCKER_OUTPUT_FOLDER,MAX_TIME_SECONDS,LOCALHOST,port,sut,tool.extra_config)
-    command += " webfuzzing/"+TOOL_NAME_PREFIX+"-"+tool.name+":"+WFC_SB_VERSION + " \\\n"
+    command += " webfuzzing/"+TOOL_NAME_PREFIX+"-"+tool.name+":"+WFE_VERSION + " \\\n"
     command += getRedirectLog(logs)
     command += "\n\n"
     command += getReportTimeout(logs) + "\n\n"

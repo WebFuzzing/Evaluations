@@ -12,6 +12,8 @@ import math
 # The version of Web Fuzzing Evaluations we are using in this study.
 WFE_VERSION = "0.0.1"
 
+# The version of Web Fuzzing Dataset we are using in this study.
+WFD_VERSION = "4.3.0"
 
 # WFD must be already installed, with an env pointing to it
 WFD_DIR = os.environ.get('WFD_DIR',"")
@@ -294,14 +296,16 @@ def getScriptHead(port,tool_label,sut, exec_dir):
 def getScriptFooter(port,tool_label,sut, exec_dir, jacoco_dir):
     s = "\n\n"
 
+    exec_docker = "/execFiles"
     filename =  getFileNamePrefix(sut.name,tool_label,port) + "__jacoco"
-    execFilePath = "\"" + exec_dir + "/" + filename + ".exec\""
+    execFilePath = exec_docker + "/" + filename + ".exec"
 
-    # FIXME should run JaCoCo in Docker
-    s += "java -jar \"" + DIST_DIR + "/jacococli.jar\" \\\n"
-    s += "  dump  --address localhost --port "+str(port+1)+" \\\n"
-    s += "  --destfile " + execFilePath + "\\\n"
+    s += "docker run --rm -v \"" + exec_dir+"\":"+ exec_docker +"  \\\n"
+    s += "  webfuzzing/wfd-jacoco:" + WFD_VERSION + " \\\n"
+    s += "    dump  --address " + LOCALHOST + " --port "+str(port+1)+" \\\n"
+    s += "    --destfile " + execFilePath + " \\\n"
     s += "  " + getRedirectLog(getLogFile("jacoco-dump",tool_label,sut.name,port)) +"\n"
+
     s += "\n"
     s += "sleep 30\n"
     s += "\n"
@@ -319,14 +323,16 @@ def getScriptFooter(port,tool_label,sut, exec_dir, jacoco_dir):
     s += "docker rmi -f "+ id+"-sut-"+sut.name+" \n"
     s += "\n"
 
+    jacoco_docker = "/resultsJacoco"
 
-    # FIXME should run JaCoCo in Docker
-    # transform .exec files into readable .csv files.
-    s += "java -jar \"" + DIST_DIR + "/jacococli.jar\" \\\n"
-    s += "  report " + execFilePath+ " \\\n"
+    s += "docker run --rm \\\n"
+    s += " -v \"" + exec_dir+"\":"+ exec_docker +"  \\\n"
+    s += " -v \"" + jacoco_dir+"\":"+ jacoco_docker +"  \\\n"
+    s += " webfuzzing/wfd-jacoco:" + WFD_VERSION + " \\\n"
+    s += "   report " + execFilePath+ " \\\n"
     for path in sut.classfiles:
-        s += "  --classfiles \"" + WFD_DIR + "/" + path + "\" \\\n"
-    s += "  --csv \"" + jacoco_dir + "/" + filename + ".csv\" \\\n"
+        s += "    --classfiles /classfiles/" + path + " \\\n"
+    s += "    --csv \"" + jacoco_docker + "/" + filename + ".csv\" \\\n"
     s += "  " + getRedirectLog(getLogFile("jacoco-report",tool_label,sut.name,port)) +"\n"
 
     return s

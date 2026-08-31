@@ -8,21 +8,13 @@ import stat
 import pathlib
 import shutil
 import math
+import subprocess
 
 # The version of Web Fuzzing Evaluations we are using in this study.
 WFE_VERSION = "0.0.1"
 
 # The version of Web Fuzzing Dataset we are using in this study.
 WFD_VERSION = "4.3.0"
-
-# WFD must be already installed, with an env pointing to it
-WFD_DIR = os.environ.get('WFD_DIR',"")
-if WFD_DIR == "":
-    raise Exception("You must specify a WFD_DIR env variable specifying the folder where WFD repository was cloned")
-
-DIST_DIR = WFD_DIR + "/dist"
-if not os.path.exists(DIST_DIR):
-    raise Exception(DIST_DIR + " does not exist. Did you run script/dist.py in WFD?")
 
 
 # Prefix use to determine the Docker images of the tools published in WFE
@@ -56,6 +48,10 @@ MAX_TIME_MINUTES = int(sys.argv[4])
 if MIN_SEED > MAX_SEED:
     print("ERROR: min seed is greater than max seed")
     exit(1)
+
+
+# WFD is going to be automatically installed via Docker
+WFD_DIR = BASE_DIR + "/wfd"
 
 
 # base seeds used for runs. TCP port bindings will be based on such seed.
@@ -353,7 +349,7 @@ def getDockerToolSetup(testdir,outputFolder,timeSeconds,host,port,sut,extra_conf
      # let's make sure we can access the results of the fuzzing session, ie, generated files, if any
      s += " -v \""+testdir+"\":"+outputFolder + " \\\n"
      # schemas and auth configurations are mounted in :ro read-only
-     s += " -v \"" + WFD_DIR + "/openapi-swagger\":" + schemasFolder + ":ro  \\\n"
+     s += " -v \"" + WFD_DIR + "/openapi\":" + schemasFolder + ":ro  \\\n"
      # FIXME should add :ro after EM fix
      s += " -v \"" + WFD_DIR + "/auth\":" + authFolder + " \\\n"
 
@@ -461,6 +457,24 @@ def createScriptForTool(tool, sut, port, seed):
     writeScript(SCRIPT_DIR,code, port, tool.label, sut.name)
 
 
+def install_WFD():
+
+    foo = BASE_DIR + "/wfd"
+
+    # Run the docker command
+    result = subprocess.run(
+        ["docker", "run", "--rm", "-v", foo+":/host-dir",
+         "webfuzzing/wfd:"+WFD_VERSION, "cp", "-r", "/wfd/.", "/host-dir/"],
+        capture_output=True,
+        text=True
+    )
+
+    if result.returncode == 0:
+        print("WFD files installed successfully!")
+    else:
+        print(f"Error: {result.stderr}")
+        raise Exception(f"Docker command failed: {result.stderr}")
+
 
 #############################################################################################
 ### Entry point of the script after input validation
@@ -475,6 +489,7 @@ os.makedirs(JACOCO_TEST_DIR)
 os.makedirs(EXEC_ONLINE_DIR)
 os.makedirs(EXEC_TEST_DIR)
 
+install_WFD()
 
 #############################################################################################
 ### Custom code for experiments

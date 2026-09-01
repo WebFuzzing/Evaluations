@@ -9,6 +9,8 @@
 ## while still trying to re-use as much of the same R code as possible.
 ################################################################################
 
+TEX <- "tex"
+MD  <- "md"
 
 verifyDataFrame <- function(dt){
 
@@ -17,6 +19,12 @@ verifyDataFrame <- function(dt){
   }
   if(! ("TOOL" %in% names(dt))){
     stop("Data frame has no column called TOOL")
+  }
+}
+
+verifyFormat <- function(format){
+  if( format != TEX && format != MD){
+    stop(paste0("Invalid format '", format, "'"))
   }
 }
 
@@ -264,8 +272,14 @@ tableBBTwoConfigs <- function(
 
 
 ################################################################
-toolLabel <- function(id){
-    return(paste0("\\",id))
+toolLabel <- function(id, format){
+    verifyFormat(format)
+    if(format == TEX){
+      return(paste0("\\",id))
+    }
+    if(format == MD){
+      return(paste0("__",id,"__"))
+    }
 }
 
 toolsSortedWithFixedFirst <- function(dt, first){
@@ -283,12 +297,15 @@ tableManyConfigs <- function(
   resultsLambda, # a lambda(dt,mask) returning an array/list of result values.
            # could be a column of dt, eg, dt$someResults[mask], or a transformation
            # involving more than 1 column, eg, cov/tot.
-  tableFileName,  # output file name, typically ending with ".tex"
+  tableFileName,  # output file name, WITHOUT file ending format
+  format = TEX, # output format. must be either "tex" (Latex) or "md" (Markdown).
   suts = NULL, #  list of SUT names, to include in the table (in case we want to skip some). if NULL, take all
   tools = NULL # list of tool names to include. if NULL, take all
 ) {
 
   verifyDataFrame(dt)
+
+  verifyFormat(format)
 
   allSuts <-  sort(unique(dt$SUT))
   if(is.null(suts)){
@@ -310,26 +327,34 @@ tableManyConfigs <- function(
     }
   }
 
-  TABLE <- paste(GENERATED_FILES, "/", tableFileName, sep = "")
+  TABLE <- paste0(GENERATED_FILES, "/", tableFileName, ".", format)
   unlink(TABLE)
   sink(TABLE, append = TRUE, split = TRUE)
 
   tryCatch({
-    cat("\\begin{tabular}{ l ",paste(rep("r ", length(tools)),collapse = '' ), "  }\\\\ \n")
-    cat("\\toprule \n")
 
-    z <- function(x){return(paste(" & ", toolLabel(tools[x])))}
-    cat("SUT ", paste(lapply(1:length(tools), z), collapse = '')," \\\\ \n", sep = "")
+    if(format == TEX){
+      cat("\\begin{tabular}{ l ",paste(rep("r ", length(tools)),collapse = '' ), "  }\\\\ \n")
+      cat("\\toprule \n")
+      z <- function(x){return(paste(" & ", toolLabel(tools[x],format)))}
+      cat("SUT ", paste(lapply(1:length(tools), z), collapse = '')," \\\\ \n", sep = "")
+      cat("\\midrule \n")
+
+    } else if(format == MD){
+      z <- function(x){return(paste(" | ", toolLabel(tools[x],format)))}
+      cat("| __SUT__ ", paste0(lapply(1:length(tools), z), collapse = '')," | \n")
+      cat("| :--- ", paste(rep("|---:", length(tools)), collapse = ""), " | \n")
+    }
 
     avgs <- matrix(nrow = length(suts), ncol = length(tools))
     ranks <- matrix(nrow = length(suts), ncol = length(tools))
 
-    cat("\\midrule \n")
 
     for (j in 1:length(suts)) {
         sut <- suts[[j]]
 
-        cat("\\emph{", sut, "}", sep = "")
+        if(format == TEX) cat("\\emph{", sut, "}", sep = "")
+        if(format == MD)  cat("|_", sut, "_", sep = "")
 
         data <- vector(mode="list", length=length(tools))
 
@@ -346,9 +371,12 @@ tableManyConfigs <- function(
             cov <- data[[i]]
             a <- mean(cov)
 
-            cat(" & ")
+            if(format == TEX) cat(" & ")
+            if(format == MD)  cat(" | ")
+
             if (a == max(avgs[j,])){
-                cat("{\\bf ")
+              if(format == TEX) cat("{\\bf ")
+              if(format == MD)  cat("__")
             }
 
             cat(formatC(a, digits = 1, format = "f"))
@@ -360,47 +388,57 @@ tableManyConfigs <- function(
             cat(" (",formatC(r, digits = 1, format = "f"),")",sep="")
 
             if (a == max(avgs[j,])){
-                cat("}")
+              if(format == TEX) cat("}")
+              if(format == MD)  cat("__")
             }
         }
-        cat(" \\\\ \n")
+        if(format == TEX) cat(" \\\\ \n ")
+        if(format == MD)  cat(" | \n")
     }
 
-    cat("\\midrule \n")
+    if(format == TEX) cat("\\midrule \n")
 
-    printSummaryComparison <- function(lambda, tools, avgs, ranks){
+    printSummaryComparison <- function(lambda, tools, avgs, ranks, format){
       for (i in 1:length(tools)){
-        cat(" & ")
+        if(format == TEX) cat(" & ")
+        if(format == MD)  cat(" | ")
+
         cat(formatC(lambda(avgs[,i]), digits = 1, format = "f"))
         cat(" (",formatC(lambda(ranks[,i]), digits = 1, format = "f"),")",sep="")
       }
     }
 
-    cat("Average ")
-    printSummaryComparison(mean,tools,avgs,ranks)
-    cat(" \\\\ \n")
-    cat("Median ")
-    printSummaryComparison(median,tools,avgs,ranks)
-    cat(" \\\\ \n")
+    if(format == TEX) cat("Average ")
+    if(format == MD)  cat("|__AVERAGE__ ")
+    printSummaryComparison(mean,tools,avgs,ranks,format)
+    if(format == TEX) cat(" \\\\ \n ")
+    if(format == MD)  cat(" | \n")
 
-    fr <- friedman.test(ranks)
-    csr <- formatC(fr$statistic, digits = 3, format = 'f')
-    p <- fr$p.value
-    if (is.nan(p)) {
-          p <- "1.000"
-    } else if (p < 0.001) {
-          p <- "$< 0.001$"
-    } else {
-          p <- formatC(p, digits = 3, format = "f")
+    if(format == TEX) cat("Median ")
+    if(format == MD)  cat("|__MEDIAN__ ")
+    printSummaryComparison(median,tools,avgs,ranks,format)
+    if(format == TEX) cat(" \\\\ \n ")
+    if(format == MD)  cat(" | \n")
+
+    if(format == TEX){
+      fr <- friedman.test(ranks)
+      csr <- formatC(fr$statistic, digits = 3, format = 'f')
+      p <- fr$p.value
+      if (is.nan(p)) {
+            p <- "1.000"
+      } else if (p < 0.001) {
+            p <- "$< 0.001$"
+      } else {
+            p <- formatC(p, digits = 3, format = "f")
+      }
+
+      fresult <- paste0("$\\chi^2$ = ", csr, ", $p$-value = ", p)
+      cat("\\midrule \n")
+      cat("Friedman Test & \\multicolumn{",length(tools),"}{r}{",fresult," }", sep = "")
+      cat(" \\\\ \n")
+      cat("\\bottomrule \n")
+      cat("\\end{tabular} \n")
     }
-
-    fresult <- paste0("$\\chi^2$ = ", csr, ", $p$-value = ", p)
-    cat("\\midrule \n")
-    cat("Friedman Test & \\multicolumn{",length(tools),"}{r}{",fresult," }", sep = "")
-    cat(" \\\\ \n")
-    cat("\\bottomrule \n")
-    cat("\\end{tabular} \n")
-
   }, finally = {
       sink()
   })

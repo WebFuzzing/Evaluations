@@ -112,7 +112,8 @@ all <- function() {
 
   tools <- toolsSortedWithFixedFirst(dt, "base")
 
-  tableManyConfigs(dt,resultsLambda,"comparisonAllJaCoCo.tex", suts, tools)
+  tableManyConfigs(dt,resultsLambda,"comparisonAllJaCoCo", "tex", suts, tools)
+  tableManyConfigs(dt,resultsLambda,"comparisonAllJaCoCo", "md", suts, tools)
 
 
   # bMask <- dt$TOOL == "base"

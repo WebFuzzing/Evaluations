@@ -263,7 +263,8 @@ all <- function() {
 
   suts <- sort(unique(dt$SUT))
 
-  # TODO need Markdown outputs
-  tableManyConfigs(dt,covered2xx, "comparisonAll2xx.tex", suts)
-  tableManyConfigs(dt,covered500, "comparisonAll500.tex", suts)
+  tableManyConfigs(dt,covered2xx, "comparisonAll2xx", "tex", suts)
+  tableManyConfigs(dt,covered500, "comparisonAll500", "tex",suts)
+  tableManyConfigs(dt,covered2xx, "comparisonAll2xx", "md", suts)
+  tableManyConfigs(dt,covered500, "comparisonAll500", "md",suts)
 }

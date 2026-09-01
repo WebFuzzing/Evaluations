@@ -52,9 +52,32 @@ TODO
 
 ## Adding New Fuzzers
 
-Adding a new fuzzer requires 
+We are keen to add new fuzzers to WFE.
+You can make a PR, or drop us a message if you are interested. 
 
-TODO
+Adding a new fuzzer requires to create a new Docker file, in a way that should be easy to update when a new version of the fuzzer comes out. 
+For example, instead of manually copy a binary file, it could be dowloand from GitHub release via `ADD`. 
+
+The new `Dockerfile` needs to be added under `tools`. You can see the existing files there to use them as a reference.
+A new entry to `docker build` the image needs to be added to `scripts/build.sh`, as well as adding a new entry in the `TOOLS` array in `scripts/run-tools`.  
+
+Each fuzzer docker container is started in exactly the same way. 
+Inputs (e.g., which OpenAPI schema to use) are provided via environment variables. 
+Those are:
+
+* __HOST__: the hostname where the API is running.
+* __PORT__: the port of where the API is expecting a TCP connection.
+* __SCHEMA_FILE_PATH__: file location of where the OpenAPI schema of the API is located. This will be automatically mounted to the container when it is started. 
+* __TIME_SECONDS__: for how long the fuzzer is expected to run. Note that experiments will automatically have a grace period (e.g., 1 minute) before forcing a termination if the Docker container of the fuzzer is still running after that amount of time. 
+* __OUTPUT_FOLDER__: where to save the results of the fuzzing (e.g., any generated test case). Such folder is automatically mounted in the Docker image, so that results can then be accessed under `<dir>/tests` once the experiments are finished. 
+* __AUTH_FILE_PATH__: location of authentication information, in [WFC format](https://github.com/WebFuzzing/Commons), if the API requires it (if not, this will be empty).  
+* __AUTH_EXTERNAL_OVERRIDE__: used if needing to override the value of `externalEndpointURL` in WFC auth configurations. Some APIs have authentication services which are run on a different port than __PORT__. As the information in WFC is static, and such port here in the experiments are dynamic, there is a need to be able to override such values. 
+* __EXTRA_CONFIGS__: any extra custom parameter, that needs to be manually set up in `scripts/run-tools.py`. This is only used when debugging different configurations of a fuzzer without the need of rebuilding the Docker images.  
+
+
+When setting up the `Dockerfile` for a new tool, it is important to try to have it ideally as close as possible as its default version, with no specialized options. 
+This is to mimic the "default" experience of a user trying to use such fuzzer, without having any depth knowledge of all of its optional parameters. 
+
 
 ## Creating Summary Tables and Plots
 

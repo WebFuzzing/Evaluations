@@ -110,7 +110,9 @@ all <- function() {
 
   suts <- sort(unique(dt$SUT))
 
-  tableManyConfigs(dt,resultsLambda,"comparisonAllJaCoCo.tex", suts)
+  tools <- toolsSortedWithFixedFirst(dt, "base")
+
+  tableManyConfigs(dt,resultsLambda,"comparisonAllJaCoCo.tex", suts, tools)
 
 
   # bMask <- dt$TOOL == "base"

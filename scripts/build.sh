@@ -17,4 +17,3 @@ docker build -t webfuzzing/$TOOL_NAME_PREFIX-restler:$WFE_VERSION       $BASE/..
 docker build -t webfuzzing/$TOOL_NAME_PREFIX-schemathesis:$WFE_VERSION  $BASE/../tools/schemathesis
 docker build -t webfuzzing/$TOOL_NAME_PREFIX-wuppiefuzz:$WFE_VERSION    $BASE/../tools/wuppiefuzz
 
-#TODO build an image for running JaCoCo

@@ -454,15 +454,18 @@ tableManyConfigs <- function(
 # A fourth column is then used to show average ranks over these 3 metrics.
 # Best results (ie lowest ranks) are highlighted.
 tableToolSummary <- function(
-  dt, # the data frame, containing all experiment data.
   toolLabel, # the label used for the TOOL column
+  xDt, # the data frame for X, containing all experiment data.
   xName, # the label used for the X data column
   xLambda, # a lambda(dt,mask) returning an array/list of result values for X.
+  yDt, # the data frame for Y, containing all experiment data.
   yName, # the label used for the Y data column
   yLambda, # a lambda(dt,mask) returning an array/list of result values for Y.
+  zDt, # the data frame for Z, containing all experiment data.
   zName, # the label used for the Z data column
   zLambda, # a lambda(dt,mask) returning an array/list of result values for Z.
-  tableFileName  # output file name, typically ending with ".tex"
+  tableFileName,  # output file name, without file ending type
+  format # either "tex" or "md"
 ) {
 
   verifyDataFrame(dt)
@@ -473,6 +476,8 @@ tableToolSummary <- function(
   TABLE <- paste0(GENERATED_FILES, "/", tableFileName)
   unlink(TABLE)
   sink(TABLE, append = TRUE, split = TRUE)
+
+  TODO
 
   tryCatch({
     cat("\\begin{tabular}{ l rrrr", "  }\\\\ \n")

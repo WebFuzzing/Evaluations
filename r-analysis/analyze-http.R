@@ -10,6 +10,8 @@ library(yaml)
 
 DATA_FILE <- paste0(RESULT_DIR_OUT, "/data_http_bb.csv")
 
+WFD_DIR <- Sys.glob(file.path(RESULT_DIR_IN, "*", "wfd"))[1]
+
 ## init raw  coverage file to DATA_FILE based on results produced by HTTP Proxy
 init <- function() {
 
@@ -214,12 +216,7 @@ pathToRegex <- function(path) {
 
 readSchema <- function(base_name) {
 
-  wfd_dir <- Sys.getenv("WFD_DIR")
-  if(wfd_dir == ""){
-    stop("Environment variable WFD_DIR is not set")
-  }
-
-  schema_folder <- paste0(wfd_dir,"/openapi-swagger/")
+  schema_folder <- paste0(WFD_DIR,"/openapi/")
   json_file <- paste0(schema_folder,base_name, ".json")
   yaml_file <- paste0(schema_folder,base_name, ".yaml")
 
@@ -266,9 +263,7 @@ all <- function() {
 
   suts <- sort(unique(dt$SUT))
 
-  notests <- dt[dt$TOOL != paste0("tests-", EVOMASTER_BB), ]
-
   # TODO need Markdown outputs
-  tableManyConfigs(notests,covered2xx, "comparisonAll2xx.tex", suts)
-  tableManyConfigs(notests,covered500, "comparisonAll500.tex", suts)
+  tableManyConfigs(dt,covered2xx, "comparisonAll2xx.tex", suts)
+  tableManyConfigs(dt,covered500, "comparisonAll500.tex", suts)
 }

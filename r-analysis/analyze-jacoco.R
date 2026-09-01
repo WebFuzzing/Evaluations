@@ -110,11 +110,7 @@ all <- function() {
 
   suts <- sort(unique(dt$SUT))
 
-  testEvoLabel <- paste0("tests-", EVOMASTER_BB)
-
-  notests <- dt[dt$TOOL != testEvoLabel, ]
-
-  tableManyConfigs(notests,resultsLambda,"comparisonAllJaCoCo.tex", suts)
+  tableManyConfigs(dt,resultsLambda,"comparisonAllJaCoCo.tex", suts)
 
 
   # bMask <- dt$TOOL == "base"

@@ -48,7 +48,47 @@ Where:
 
 ## Experiment Results
 
-TODO
+This repository not only contains the scaffolding for running experiments on WFD, but also the results of these experiments, done at different points in time. 
+
+When a new experiment is run, we check if any new version of any of the employed fuzzers is out, and update it accordingly.
+This check is done for all fuzzers on the same day.
+
+Experiments are repeated `R` times, with an input time budget of `T` minutes.
+We use __all__ the `K` APIs in the latest version of WFD at the time of the experiments.  
+
+
+Currently, in WFE the fuzzers are compared based on 4 metrics:
+
+* HTTP 2xx Coverage: percentage of how many endpoints it was possible to make an HTTP call returning a 2xx status code.
+
+* Number of 500 Server Errors: number of _distinct_ endpoints in which it was possible to make at least one HTTP call returning a 500 status code. 
+
+* Line Coverage: measured with JaCoCo.
+
+* Overall: overall average of the average rankings of the 3 compared metrics. 
+
+Given `Z` compared fuzzers,
+for each API, for each metric, we rank the fuzzers' performance.
+Rank 1 is best, whereas rank `Z` is worst performances. 
+In the table results, ranks are shown in `()` parentheses. 
+Ties are solved with the average of the ranks. 
+
+### Latest result summary
+
+|Tools | %2xx | #500 | %Lines | Overall | 
+|:---|---:|---:|---:|---:| 
+|_aratrl_ | 13.7 (4.6) | 0.7 (4.0) | 23.0 (4.8) | 4.5 | 
+|_cats_ | 18.2 (4.2) | 1.4 (4.0) | 26.3 (4.0) | 4.1 | 
+|_evomaster_ | __51.7 (2.0)__ | __9.2 (2.7)__ | __43.7 (1.8)__ | __2.2__ | 
+|_restler_ | 24.0 (3.7) | 0.9 (4.1) | 28.4 (4.2) | 4.0 | 
+|_schemathesis_ | 37.9 (2.6) | 6.8 (2.8) | 39.4 (2.3) | 2.6 | 
+|_wuppiefuzz_ | 18.5 (3.9) | 2.6 (3.4) | 26.6 (3.8) | 3.7 |
+
+
+### Experiment Data
+
+* Aug'26 (R=3,T=2,K=36): [overall](data/26_08_3r_2m/overall.md), [2xx](data/26_08_3r_2m/comparisonAll2xx.md), [500](data/26_08_3r_2m/comparisonAll500.md), [lines](data/26_08_3r_2m/comparisonAllJaCoCo.md)
+
 
 ## Adding New Fuzzers
 

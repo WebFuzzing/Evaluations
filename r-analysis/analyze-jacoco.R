@@ -7,6 +7,8 @@ source("commons.R")
 source("tables-comparison.R")
 
 DATA_FILE <- paste(RESULT_DIR_OUT, "/data_jacoco_bb.csv", sep = "")
+DATA_JACOCO_BB_CSV_FILE <- DATA_FILE
+
 
 ## init raw  coverage file to DATA_FILE based on results produced by jacoco
 init <- function() {
@@ -86,7 +88,7 @@ checkData <- function() {
 
 
 
-computeCoverage <- function(dt, mask) {
+jacoco_computeCoverage <- function(dt, mask) {
     cov <- dt$COVERED[mask]
     if (length(cov) == 0) {
       return(c(0))
@@ -106,7 +108,7 @@ all <- function() {
 
   dt <- read.csv(DATA_FILE, header = T)
 
-  resultsLambda <- computeCoverage
+  resultsLambda <- jacoco_computeCoverage
 
   suts <- sort(unique(dt$SUT))
 

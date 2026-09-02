@@ -468,22 +468,29 @@ tableToolSummary <- function(
   format # either "tex" or "md"
 ) {
 
-  verifyDataFrame(dt)
+  verifyDataFrame(xDt)
+  verifyDataFrame(yDt)
+  verifyDataFrame(zDt)
 
-  suts <-  sort(unique(dt$SUT))
-  tools <- sort(unique(dt$TOOL))
+  suts <-  sort(unique(xDt$SUT))
+  tools <- sort(unique(xDt$TOOL))
 
-  TABLE <- paste0(GENERATED_FILES, "/", tableFileName)
+  TABLE <- paste0(GENERATED_FILES, "/", tableFileName, ".", format)
   unlink(TABLE)
   sink(TABLE, append = TRUE, split = TRUE)
 
-  TODO
+
 
   tryCatch({
-    cat("\\begin{tabular}{ l rrrr", "  }\\\\ \n")
-    cat("\\toprule \n")
-
-    cat(toolLabel," & ", xName," & ", yName," & ", zName," & Overall \\\\ \n", sep = "")
+    if(format == TEX){
+      cat("\\begin{tabular}{ l rrrr", "  }\\\\ \n")
+      cat("\\toprule \n")
+      cat(toolLabel," & ", xName," & ", yName," & ", zName," & Overall \\\\ \n", sep = "")
+    }
+    if(format == MD){
+      cat("|", toolLabel," | ", xName," | ", yName," | ", zName," | Overall | \n", sep = "")
+      cat("|:---|---:|---:|---:|---:| \n")
+    }
 
     avgsX <- matrix(nrow = length(suts), ncol = length(tools))
     ranksX <- matrix(nrow = length(suts), ncol = length(tools))
@@ -492,18 +499,20 @@ tableToolSummary <- function(
     avgsZ <- matrix(nrow = length(suts), ncol = length(tools))
     ranksZ <- matrix(nrow = length(suts), ncol = length(tools))
 
-    cat("\\midrule \n")
+    if(format == TEX){
+      cat("\\midrule \n")
+    }
 
     for (j in 1:length(suts)) {
       sut <- suts[[j]]
 
       for (i in 1:length(tools)){
         t <- tools[i]
-        mask <- dt$SUT==sut & dt$TOOL==t
+        mask <- xDt$SUT==sut & xDt$TOOL==t
 
-        avgsX[j,i] <- mean(xLambda(dt, mask))
-        avgsY[j,i] <- mean(yLambda(dt, mask))
-        avgsZ[j,i] <- mean(zLambda(dt, mask))
+        avgsX[j,i] <- mean(xLambda(xDt, mask))
+        avgsY[j,i] <- mean(yLambda(yDt, mask))
+        avgsZ[j,i] <- mean(zLambda(zDt, mask))
       }
 
       ranksX[j,] <- rank(-avgsX[j,])
@@ -519,7 +528,8 @@ tableToolSummary <- function(
     bestOverall <- min(overall)
 
     for (i in 1:length(tools)){
-      cat("\\emph{", tools[i], "}", sep = "")
+      if(format == TEX) cat("\\emph{", tools[i], "}", sep = "")
+      if(format == MD)  cat("|_", tools[i], "_", sep = "")
 
       x <- mean(avgsX[,i])
       y <- mean(avgsY[,i])
@@ -528,36 +538,54 @@ tableToolSummary <- function(
       rY <- mean(ranksY[,i])
       rZ <- mean(ranksZ[,i])
 
-      mark <- "\\cellcolor{gray!30} "
+      if(format == TEX) mark <- "\\cellcolor{gray!30} "
+      if(format == MD)  mark <- "__"
 
-      cat(" & ")
+      if(format == TEX) cat(" & ")
+      if(format == MD) cat(" | ")
       if(rX == bestRX){
         cat(mark)
       }
       cat(formatC(x, digits = 1, format = "f"))
       cat(" (",formatC(rX, digits = 1, format = "f"),")",sep="")
+      if(rX == bestRX){
+        if(format == MD) cat(mark)
+      }
 
-      cat(" & ")
+
+      if(format == TEX) cat(" & ")
+      if(format == MD) cat(" | ")
       if(rY == bestRY){
         cat(mark)
       }
       cat(formatC(y, digits = 1, format = "f"))
       cat(" (",formatC(rY, digits = 1, format = "f"),")",sep="")
+      if(rY == bestRY){
+        if(format == MD) cat(mark)
+      }
 
-      cat(" & ")
+      if(format == TEX) cat(" & ")
+      if(format == MD) cat(" | ")
       if(rZ == bestRZ){
         cat(mark)
       }
       cat(formatC(z, digits = 1, format = "f"))
       cat(" (",formatC(rZ, digits = 1, format = "f"),")",sep="")
+      if(rZ == bestRZ){
+        if(format == MD) cat(mark)
+      }
 
-      cat(" & ")
-      #best <- mean(rX,rY,rZ)
       best <- overall[i]
+
+      if(format == TEX) cat(" & ")
+      if(format == MD) cat(" | ")
       if(best == bestOverall){
         cat(mark)
       }
       cat(formatC(best, digits = 1, format = "f"))
+      if(best == bestOverall){
+        if(format == MD) cat(mark)
+      }
 
       cat(" \\\\ \n")
     }

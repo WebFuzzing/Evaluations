@@ -9,6 +9,7 @@ library("jsonlite")
 library(yaml)
 
 DATA_FILE <- paste0(RESULT_DIR_OUT, "/data_http_bb.csv")
+DATA_HTTP_BB_CSV_FILE <- DATA_FILE
 
 WFD_DIR <- Sys.glob(file.path(RESULT_DIR_IN, "*", "wfd"))[1]
 
@@ -237,34 +238,35 @@ readSchema <- function(base_name) {
   }
 }
 
+http_covered2xx <- function(dt,mask){
+  cov <- dt$COVERED2xx[mask]
+  if (length(cov) == 0) {
+    return(c(0))
+  }
+  total <- unique(dt$ENDPOINTS[mask])[1]
+  cov <- (cov / total) * 100
+  return(cov)
+}
 
+http_covered500 <- function(dt,mask){
+  cov <- dt$COVERED500[mask]
+  if(length(cov) == 0){
+    return(c(0))
+  }
+  return(cov)
+}
 
 ################################################################
 all <- function() {
 
   dt <- read.csv(DATA_FILE, header = T)
 
-  covered2xx <- function(dt,mask){
-    cov <- dt$COVERED2xx[mask]
-    if (length(cov) == 0) {
-      return(c(0))
-    }
-    total <- unique(dt$ENDPOINTS[mask])[1]
-    cov <- (cov / total) * 100
-    return(cov)
-  }
-  covered500 <- function(dt,mask){
-    cov <- dt$COVERED500[mask]
-    if(length(cov) == 0){
-      return(c(0))
-    }
-    return(cov)
-  }
+
 
   suts <- sort(unique(dt$SUT))
 
-  tableManyConfigs(dt,covered2xx, "comparisonAll2xx", "tex", suts)
-  tableManyConfigs(dt,covered500, "comparisonAll500", "tex",suts)
-  tableManyConfigs(dt,covered2xx, "comparisonAll2xx", "md", suts)
-  tableManyConfigs(dt,covered500, "comparisonAll500", "md",suts)
+  tableManyConfigs(dt,http_covered2xx, "comparisonAll2xx", "tex", suts)
+  tableManyConfigs(dt,http_covered500, "comparisonAll500", "tex",suts)
+  tableManyConfigs(dt,http_covered2xx, "comparisonAll2xx", "md", suts)
+  tableManyConfigs(dt,http_covered500, "comparisonAll500", "md",suts)
 }

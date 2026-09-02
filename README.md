@@ -73,7 +73,7 @@ Rank 1 is best, whereas rank `Z` is worst performances.
 In the table results, ranks are shown in `()` parentheses. 
 Ties are solved with the average of the ranks. 
 
-### Latest result summary
+### Latest Result Summary
 
 |Tools | %2xx | #500 | %Lines | Overall | 
 |:---|---:|---:|---:|---:| 

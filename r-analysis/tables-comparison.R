@@ -509,9 +509,12 @@ tableToolSummary <- function(
       for (i in 1:length(tools)){
         t <- tools[i]
         mask <- xDt$SUT==sut & xDt$TOOL==t
-
         avgsX[j,i] <- mean(xLambda(xDt, mask))
+
+        mask <- yDt$SUT==sut & yDt$TOOL==t
         avgsY[j,i] <- mean(yLambda(yDt, mask))
+
+        mask <- zDt$SUT==sut & zDt$TOOL==t
         avgsZ[j,i] <- mean(zLambda(zDt, mask))
       }
 
@@ -587,12 +590,14 @@ tableToolSummary <- function(
         if(format == MD) cat(mark)
       }
 
-      cat(" \\\\ \n")
+      if(format == TEX) cat(" \\\\ \n")
+      if(format == MD)  cat(" | \n")
     }
 
-
-    cat("\\bottomrule \n")
-    cat("\\end{tabular} \n")
+    if(format == TEX){
+      cat("\\bottomrule \n")
+      cat("\\end{tabular} \n")
+    }
 
   }, finally = {
     sink()

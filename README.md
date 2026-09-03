@@ -59,15 +59,15 @@ We use __all__ the `K` APIs in the latest version of WFD at the time of the expe
 
 Currently, in WFE the fuzzers are compared based on 5 metrics:
 
-* HTTP 2xx Coverage: percentage of how many endpoints it was possible to make an HTTP call returning a 2xx status code.
+* _HTTP 2xx Coverage_: percentage of how many endpoints it was possible to make an HTTP call returning a 2xx status code.
 
-* Number of 500 Server Errors: average number per API of _distinct_ endpoints in which it was possible to make at least one HTTP call returning a 500 status code. 
+* _Number of 500 Server Errors_: average number per API of _distinct_ endpoints in which it was possible to make at least one HTTP call returning a 500 status code. 
 
-* Line Coverage: measured with JaCoCo. This is measured during the fuzzing session, and not when executing the generated tests (this latter would like be lower, as in black-box testing the info on coverage is unknown during the fuzzing session). 
+* _Line Coverage_: measured with JaCoCo. This is measured during the fuzzing session, and not when executing the generated tests (this latter would like be lower, as in black-box testing the info on coverage is unknown during the fuzzing session). 
 
-* Best On: the number of APIxMetric combinations in which a fuzzer gave the best results, with no ties. Given `K` APIs (e.g., `K=36`) and `M` metrics (e.g., `M=3`), this score can be from 0 to up to `K*M` (e.g., `36*3=108`). This is based on the previous 3 metrics. 
+* _Best On_: the number of APIxMetric combinations in which a fuzzer gave the best results, with no ties. Given `K` APIs (e.g., `K=36`) and `M` metrics (e.g., `M=3`), this score can be from 0 to up to `K*M` (e.g., `36*3=108`). This is based on the previous 3 metrics. 
 
-* Overall: overall average of the average rankings of the other 4 compared metrics. 
+* _Overall_: overall average of the average rankings of the other 4 compared metrics. 
 
 Given `Z` compared fuzzers,
 for each API, for each metric, we rank the fuzzers' performance.

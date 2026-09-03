@@ -483,13 +483,13 @@ tableToolSummary <- function(
 
   tryCatch({
     if(format == TEX){
-      cat("\\begin{tabular}{ l rrrr", "  }\\\\ \n")
+      cat("\\begin{tabular}{ l rrrrr", "  }\\\\ \n")
       cat("\\toprule \n")
-      cat(toolLabel," & ", xName," & ", yName," & ", zName," & Overall \\\\ \n", sep = "")
+      cat(toolLabel," & ", xName," & ", yName," & ", zName," & Best-On & Overall \\\\ \n", sep = "")
     }
     if(format == MD){
-      cat("|", toolLabel," | ", xName," | ", yName," | ", zName," | Overall | \n", sep = "")
-      cat("|:---|---:|---:|---:|---:| \n")
+      cat("|", toolLabel," | ", xName," | ", yName," | ", zName," | Best-On | Overall | \n", sep = "")
+      cat("|:---|---:|---:|---:|---:|---:| \n")
     }
 
     avgsX <- matrix(nrow = length(suts), ncol = length(tools))
@@ -498,6 +498,8 @@ tableToolSummary <- function(
     ranksY <- matrix(nrow = length(suts), ncol = length(tools))
     avgsZ <- matrix(nrow = length(suts), ncol = length(tools))
     ranksZ <- matrix(nrow = length(suts), ncol = length(tools))
+
+    toolBest <- rep(0, length(tools))
 
     if(format == TEX){
       cat("\\midrule \n")
@@ -521,13 +523,24 @@ tableToolSummary <- function(
       ranksX[j,] <- rank(-avgsX[j,])
       ranksY[j,] <- rank(-avgsY[j,])
       ranksZ[j,] <- rank(-avgsZ[j,])
+
+      bestX <- max(avgsX[j,])
+      bestY <- max(avgsY[j,])
+      bestZ <- max(avgsZ[j,])
+
+      if(sum(avgsX[j,] == bestX) == 1)  toolBest[which(avgsX[j,] == bestX)] <- toolBest[which(avgsX[j,] == bestX)] + 1
+      if(sum(avgsY[j,] == bestY) == 1)  toolBest[which(avgsY[j,] == bestY)] <- toolBest[which(avgsY[j,] == bestY)] + 1
+      if(sum(avgsZ[j,] == bestZ) == 1)  toolBest[which(avgsZ[j,] == bestZ)] <- toolBest[which(avgsZ[j,] == bestZ)] + 1
     }
+
+    ranksK <- rank(-toolBest)
 
     bestRX <- min(colMeans(ranksX))
     bestRY <- min(colMeans(ranksY))
     bestRZ <- min(colMeans(ranksZ))
+    bestRK <- min(ranksK)
 
-    overall <- (colMeans(ranksX) + colMeans(ranksY) + colMeans(ranksZ)) / 3
+    overall <- (colMeans(ranksX) + colMeans(ranksY) + colMeans(ranksZ) + ranksK) / 4
     bestOverall <- min(overall)
 
     for (i in 1:length(tools)){
@@ -537,9 +550,11 @@ tableToolSummary <- function(
       x <- mean(avgsX[,i])
       y <- mean(avgsY[,i])
       z <- mean(avgsZ[,i])
+      k <- toolBest[i]
       rX <- mean(ranksX[,i])
       rY <- mean(ranksY[,i])
       rZ <- mean(ranksZ[,i])
+      rK <- ranksK[i]
 
       if(format == TEX) mark <- "\\cellcolor{gray!30} "
       if(format == MD)  mark <- "__"
@@ -575,6 +590,17 @@ tableToolSummary <- function(
       cat(formatC(z, digits = 1, format = "f"))
       cat(" (",formatC(rZ, digits = 1, format = "f"),")",sep="")
       if(rZ == bestRZ){
+        if(format == MD) cat(mark)
+      }
+
+      if(format == TEX) cat(" & ")
+      if(format == MD) cat(" | ")
+      if(rK == bestRK){
+        cat(mark)
+      }
+      cat(formatC(k, digits = 0, format = "f"))
+      cat(" (",formatC(rK, digits = 0, format = "f"),")",sep="")
+      if(rK == bestRK){
         if(format == MD) cat(mark)
       }
 

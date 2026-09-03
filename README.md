@@ -61,7 +61,7 @@ Currently, in WFE the fuzzers are compared based on 5 metrics:
 
 * HTTP 2xx Coverage: percentage of how many endpoints it was possible to make an HTTP call returning a 2xx status code.
 
-* Number of 500 Server Errors: number of _distinct_ endpoints in which it was possible to make at least one HTTP call returning a 500 status code. 
+* Number of 500 Server Errors: average number per API of _distinct_ endpoints in which it was possible to make at least one HTTP call returning a 500 status code. 
 
 * Line Coverage: measured with JaCoCo. This is measured during the fuzzing session, and not when executing the generated tests (this latter would like be lower, as in black-box testing the info on coverage is unknown during the fuzzing session). 
 

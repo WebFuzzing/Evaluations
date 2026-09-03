@@ -111,7 +111,6 @@ SLEEP=180
 YAML="yaml"
 JSON="json"
 
-# To ge the SUTs, you need in WFD to run the script "scripts/dist.py"
 SUTS = [
     Sut("bibliothek",False,SLEEP,JSON,["jdk_17_gradle/cs/rest/bibliothek/build/classes"]),
     Sut("blogapi",True, SLEEP,JSON,["jdk_8_maven/cs/rest/original/blogapi/target/classes"]),

@@ -71,7 +71,7 @@ Currently, in WFE the fuzzers are compared based on 5 metrics:
 
 Given `Z` compared fuzzers,
 for each API, for each metric, we rank the fuzzers' performance.
-Rank 1 is best, whereas rank `Z` is worst performances. 
+Rank 1 is best, whereas rank `Z` is for the worst performance. 
 In the table results, ranks are shown in `()` parentheses. 
 Ties are solved with the average of the ranks. 
 

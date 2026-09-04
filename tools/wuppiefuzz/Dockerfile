@@ -11,6 +11,8 @@ ENTRYPOINT ["/bin/sh", "-c", \
         ${SCHEMA_FILE_PATH} \
         --target http://${HOST}:${PORT} \
         --timeout ${TIME_SECONDS} \
+        --report=false \
+        ${AUTH_FILE_PATH:+--authentication} ${AUTH_FILE_PATH} \
         ${EXTRA_CONFIGS} \
     " \
 ]

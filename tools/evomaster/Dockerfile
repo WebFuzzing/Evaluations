@@ -11,7 +11,6 @@ ENTRYPOINT ["/bin/sh", "-c", \
     --base http://${HOST}:${PORT} \
     --outputFolder ${OUTPUT_FOLDER} \
     ${AUTH_FILE_PATH:+--configPath} ${AUTH_FILE_PATH} \
-    ${AUTH_EXTERNAL_OVERRIDE:+--overrideAuthExternalEndpointURL} ${AUTH_EXTERNAL_OVERRIDE} \
     ${EXTRA_CONFIGS} \
     " \
 ]

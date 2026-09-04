@@ -19,6 +19,7 @@ ENTRYPOINT ["/bin/sh", "-c", \
     --blackbox \
     --reportFormat JUNIT \
     --contract ${SCHEMA_FILE_PATH} \
+    --skipReportingForSuccess \
     --server http://${HOST}:${PORT} \
     ${EXTRA_CONFIGS} \
     " \
@@ -26,3 +27,4 @@ ENTRYPOINT ["/bin/sh", "-c", \
 
 # TODO removed following for now, as generating 10s of GB of data
 #    --output ${OUTPUT_FOLDER} \
+#

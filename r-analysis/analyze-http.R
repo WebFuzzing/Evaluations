@@ -71,11 +71,6 @@ checkData <- function() {
   tools <- sort(unique(dt$TOOL))
   suts <- sort(unique(dt$SUT))
 
-  missing <- setdiff(SUTS, suts)
-  if (length(missing) > 0) {
-    cat("WARNING. Missing SUTs: ", missing, "\n")
-  }
-
   for (s in suts) {
     cat("\n")
 
@@ -99,6 +94,12 @@ checkData <- function() {
       }
     }
   }
+
+  missing <- setdiff(SUTS, suts)
+  if (length(missing) > 0) {
+    cat("\n\nWARNING. Missing SUTs: ", missing, "\n")
+  }
+
 }
 
 

@@ -9,6 +9,7 @@ import pathlib
 import shutil
 import math
 import subprocess
+import re
 
 # The version of Web Fuzzing Evaluations we are using in this study.
 WFE_VERSION = "0.0.1"
@@ -220,7 +221,7 @@ EXEC_ONLINE_DIR = BASE_DIR+"/exec-online"
 # test: coverage during executing generated tests
 JACOCO_TEST_DIR = BASE_DIR+"/jacoco-test"
 EXEC_TEST_DIR = BASE_DIR+"/exec-test"
-
+MODIFIED_AUTH = BASE_DIR + "/modified-auth"
 
 # Do write on disk the content of 'code' as an executable bash script
 def writeScript(basedir, code, port, tool_label, sut_name):
@@ -341,6 +342,8 @@ def getDockerToolSetup(testdir,outputFolder,timeSeconds,host,port,sut,extra_conf
 
      schemasFolder = "/schemas"
      authFolder    = "/auth"
+     authFile = sut.name + "-auth" + str(port) + ".yaml"
+     authTarget = authFolder + "/" + authFile
 
      # here we connect on the host... an alternative would be to mount on same network of docker-compose
      # of the SUT... but that would be complicated, and harder for debugging
@@ -350,7 +353,7 @@ def getDockerToolSetup(testdir,outputFolder,timeSeconds,host,port,sut,extra_conf
      # schemas and auth configurations are mounted in :ro read-only
      s += " -v \"" + WFD_DIR + "/openapi\":" + schemasFolder + ":ro  \\\n"
      # FIXME should add :ro after EM fix
-     s += " -v \"" + WFD_DIR + "/auth\":" + authFolder + " \\\n"
+     s += " -v \"" + MODIFIED_AUTH + "/" + authFile + "\":" + authTarget + " \\\n"
 
      # env variables
      s += " -e OUTPUT_FOLDER=\"" + outputFolder + "\" \\\n"
@@ -361,8 +364,9 @@ def getDockerToolSetup(testdir,outputFolder,timeSeconds,host,port,sut,extra_conf
      s += " -e EXTRA_CONFIGS=\"" + extra_config + "\" \\\n"
 
      if sut.auth:
-        s += " -e AUTH_FILE_PATH=\"" + authFolder + "/" + sut.name + "-auth.yaml\" \\\n"
-        s += " -e AUTH_EXTERNAL_OVERRIDE=\""+host+":"+str(port+2)  + "\" \\\n"
+#          s+= " -e AUTH_FILE_PATH=\"" + MODIFIED_AUTH + "/" + sut.name + "-auth" + port +".yaml\" \\\n"
+        s += " -e AUTH_FILE_PATH=\"" + authTarget + "\" \\\n"
+#         s += " -e AUTH_EXTERNAL_OVERRIDE=\""+host+":"+str(port+2)  + "\" \\\n"
 
      return s
 
@@ -440,6 +444,12 @@ def createScriptForTool(tool, sut, port, seed):
     logs = getLogFile("tool",tool.label,sut.name,port)
     testdir = getTestDir(tool.label,sut.name,port)
 
+    if sut.auth:
+        original = WFD_DIR + "/auth/"+ sut.name + "-auth.yaml"
+        target   = MODIFIED_AUTH + "/" + sut.name + "-auth" + str(port) +".yaml"
+        shutil.copy(original, target)
+        replace_externalEndpointURL(target, "http://" + LOCALHOST + ":" + str(port+2) )
+
     ## start tool command
     command = ""
     command += TIMEOUT_COMMAND + " \\\n"
@@ -475,6 +485,26 @@ def install_WFD():
         raise Exception(f"Docker command failed: {result.stderr}")
 
 
+# There is a need to override the value of externalEndpointURL in WFC auth configurations.
+# Some APIs have authentication services which are run on a different port than PORT.
+# As the information in WFC is static, and such port here in the experiments are dynamic,
+# there is a need to be able to override such values with the correct dynamic host:port.
+def replace_externalEndpointURL(file_path, new_base_url):
+
+    with open(file_path, 'r') as f:
+            content = f.read()
+
+    pattern = r'^([ \t]*externalEndpointURL:[ \t]*["\']?)(https?://[^/"\']+)(["\']?.*)$'
+
+    def replace_url(match):
+            return match.group(1) + new_base_url + match.group(3)
+
+    new_content = re.sub(pattern, replace_url, content, flags=re.MULTILINE)
+
+    with open(file_path, 'w') as f:
+        f.write(new_content)
+
+
 #############################################################################################
 ### Entry point of the script after input validation
 
@@ -487,6 +517,7 @@ os.makedirs(JACOCO_ONLINE_DIR)
 os.makedirs(JACOCO_TEST_DIR)
 os.makedirs(EXEC_ONLINE_DIR)
 os.makedirs(EXEC_TEST_DIR)
+os.makedirs(MODIFIED_AUTH)
 
 install_WFD()
 

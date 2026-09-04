@@ -112,8 +112,7 @@ Those are:
 * __SCHEMA_FILE_PATH__: file location of where the OpenAPI schema of the API is located. This will be automatically mounted to the container when it is started. 
 * __TIME_SECONDS__: for how long the fuzzer is expected to run. Note that experiments will automatically have a grace period (e.g., 1 minute) before forcing a termination if the Docker container of the fuzzer is still running after that amount of time. 
 * __OUTPUT_FOLDER__: where to save the results of the fuzzing (e.g., any generated test case). Such folder is automatically mounted in the Docker image, so that results can then be accessed under `<dir>/tests` once the experiments are finished. 
-* __AUTH_FILE_PATH__: location of authentication information, in [WFC format](https://github.com/WebFuzzing/Commons), if the API requires it (if not, this will be empty).  
-* __AUTH_EXTERNAL_OVERRIDE__: used if needing to override the value of `externalEndpointURL` in WFC auth configurations. Some APIs have authentication services which are run on a different port than __PORT__. As the information in WFC is static, and such port here in the experiments are dynamic, there is a need to be able to override such values. 
+* __AUTH_FILE_PATH__: location of authentication information, in [WFC format](https://github.com/WebFuzzing/Commons), if the API requires it (if not, this will be empty).
 * __EXTRA_CONFIGS__: any extra custom parameter, that needs to be manually set up in `scripts/run-tools.py`. This is only used when debugging different configurations of a fuzzer without the need of rebuilding the Docker images.  
 
 

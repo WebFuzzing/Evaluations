@@ -405,8 +405,15 @@ def getTestDir(tool_label,sut_name,port):
     return pathlib.PurePath(TESTS_DIR + "/"+ tool_label  + "/" + sut_name + "/" + str(port)).as_posix()
 
 
-def getReportTimeout(logs):
-    command =  "if [[ $? -eq 124 ]]; then \n"
+def getReportTimeout(logs, piped):
+    if piped:
+        # first command in the pipe
+        status = "${PIPESTATUS[0]}"
+    else
+        # last command
+        status = "$?"
+
+    command =  "if [[ " + status + " -eq 124 ]]; then \n"
     command += "  echo \"###################################################################\" >> " + logs + " \n"
     command += "  echo \"### ERROR TIMEOUT: execution of tool was stopped due to timeout ###\" >> " + logs + " \n"
     command += "  echo \"###################################################################\" >> " + logs + " \n"
@@ -458,7 +465,7 @@ def createScriptForTool(tool, sut, port, seed):
     command += " webfuzzing/"+TOOL_NAME_PREFIX+"-"+tool.name+":"+WFE_VERSION + " \\\n"
     command += getRedirectLog(logs)
     command += "\n\n"
-    command += getReportTimeout(logs) + "\n\n"
+    command += getReportTimeout(logs, True) + "\n\n"
 
     code = (getScriptHead(port, tool.label, sut, EXEC_ONLINE_DIR)
             + command

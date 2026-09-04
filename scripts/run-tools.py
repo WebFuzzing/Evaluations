@@ -285,7 +285,9 @@ def getScriptHead(port,tool_label,sut, exec_dir):
         + getRedirectLog(getLogFile("sut",tool_label,sut.name,port)) + "  & \n\n"
 
     # Wait until HTTP endpoint on target port responds (or timeout)
-    s += "wait_for_sut " + str(port) + " " + str(sut.sleep) + "\n\n"
+    s += "wait_for_sut " + str(port) + " " + str(sut.sleep)
+    s += "  " + getRedirectLog(getLogFile("startup-wait",tool_label,sut.name,port)) +"\n"
+    s += "\n\n"
 
     return s
 
@@ -307,16 +309,25 @@ def getScriptFooter(port,tool_label,sut, exec_dir, jacoco_dir):
     s += "\n"
 
     # once fuzzer is completed, shut down Docker Compose
-    s += "docker-compose -f $SUT down --remove-orphans \n\n"
+    s += "docker-compose -f $SUT down --remove-orphans"
+    s += "  " + getRedirectLog(getLogFile("shutdown",tool_label,sut.name,port)) +"\n"
+    s += "\n\n"
 
     s += "# unfortunately, 'down' is not reliable... can leave images and networks up and running\n"
     s += "sleep 30\n"
     id = dockerId(port)
-    s += "docker ps -q --filter \"label=com.docker.compose.project="+id+"\" | xargs -r docker stop\n"
+    s += "docker ps -q --filter \"label=com.docker.compose.project="+id+"\" | xargs -r docker stop"
+    s += "  " + getRedirectLog(getLogFile("shutdown",tool_label,sut.name,port)) +"\n"
+    s += "\n\n"
+
     s += "sleep 30\n"
-    s += "docker network rm "+ id+"_default \n"
+    s += "docker network rm "+ id+"_default "
+    s += "  " + getRedirectLog(getLogFile("shutdown",tool_label,sut.name,port)) +"\n"
+    s += "\n\n"
+
     # this is the name of build images of SUT inside Docker-Compose
-    s += "docker rmi -f "+ id+"-sut-"+sut.name+" \n"
+    s += "docker rmi -f "+ id+"-sut-"+sut.name+" "
+    s += "  " + getRedirectLog(getLogFile("shutdown",tool_label,sut.name,port)) +"\n"
     s += "\n"
 
     jacoco_docker = "/resultsJacoco"
@@ -364,9 +375,7 @@ def getDockerToolSetup(testdir,outputFolder,timeSeconds,host,port,sut,extra_conf
      s += " -e EXTRA_CONFIGS=\"" + extra_config + "\" \\\n"
 
      if sut.auth:
-#          s+= " -e AUTH_FILE_PATH=\"" + MODIFIED_AUTH + "/" + sut.name + "-auth" + port +".yaml\" \\\n"
         s += " -e AUTH_FILE_PATH=\"" + authTarget + "\" \\\n"
-#         s += " -e AUTH_EXTERNAL_OVERRIDE=\""+host+":"+str(port+2)  + "\" \\\n"
 
      return s
 
@@ -409,7 +418,7 @@ def getReportTimeout(logs, piped):
     if piped:
         # first command in the pipe
         status = "${PIPESTATUS[0]}"
-    else
+    else:
         # last command
         status = "$?"
 

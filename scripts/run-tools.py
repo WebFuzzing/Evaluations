@@ -25,9 +25,18 @@ LOCALHOST = "host.docker.internal"
 # Folder inside docker images to where the tools should write their results
 DOCKER_OUTPUT_FOLDER = "/output"
 
+
+### Named optional parameters
+LABEL_tools = "tools"
+LABEL_suts = "suts"
+LABELS = [LABEL_tools,LABEL_suts]
+
+N_PARAMS = 5
+
 # recall sys.argv[0] is the script name
-if len(sys.argv) < 5 or len(sys.argv) > 6 :
-    print("Usage:\n<nameOfScript>.py <dir> <minSeed> <maxSeed> <timeMinutes> (<tool>,...,<tool>)?")
+if len(sys.argv) < N_PARAMS:
+    print("Usage:\n<nameOfScript>.py <dir> <minSeed> <maxSeed> <timeMinutes> named_param=? ... named_param=?")
+    print("Available named parameters: " + str(LABELS))
     exit(1)
 
 # When creating a new set of experiments, all needed files will be saved in a folder
@@ -49,6 +58,40 @@ MAX_TIME_MINUTES = int(sys.argv[4])
 if MIN_SEED > MAX_SEED:
     print("ERROR: min seed is greater than max seed")
     exit(1)
+
+# String to filter tools to be included.
+# A string could refer to multiple tools separated by a `,` like a,b
+# None represents all tools should be included.
+# Default is None.
+TOOL_FILTER = None
+
+# An optional string to filter SUTs to be included based on their names
+# A string could refer to multiple SUTs separated by a `,` like a,b
+# Note that None represents all SUTs should be included
+# and only consider unique ones, eg, create one experiment setting for a,a
+# Default is None
+SUT_FILTER = None
+
+
+### Derived named variables ###
+if len(sys.argv) > N_PARAMS:
+    # There might be better ways to build such map in Python...
+    options = sys.argv[N_PARAMS:len(sys.argv)]
+    keys   = [x.lower() for x in list(map(lambda z: z.split("=")[0], options))]
+    values = list(map(lambda z: z.split("=")[1], options))
+    kv = dict(zip(keys,values))
+
+    if LABEL_tools in kv:
+        TOOL_FILTER = kv[LABEL_tools]
+
+    if LABEL_suts in kv:
+        SUT_FILTER = kv[LABEL_suts]
+
+    for key in kv:
+        if key not in LABELS:
+            print("Undefined option: '" + key +"'. Available options: ")
+            print(*LABELS)
+            exit(1)
 
 
 # WFD is going to be automatically installed via Docker
@@ -209,6 +252,16 @@ SUTS = [
     Sut("webgoat",True,SLEEP,JSON,["jdk_21_maven/cs/rest-gui/webgoat/target/classes"]),
     Sut("youtube-mock",False,SLEEP,YAML,["jdk_8_maven/cs/rest/original/youtube-mock/target/classes"]),
 ]
+
+if SUT_FILTER is not None:
+    filteredsut = []
+    for s in list(set(SUT_FILTER.split(","))):
+        found = list(filter(lambda x: x.name.lower() == s.lower(), SUTS))
+        if len(found) == 0:
+            print("ERROR: cannot find the specified SUT "+s)
+            exit(1)
+        filteredsut.extend(found)
+    SUTS = filteredsut
 
 
 SCRIPT_DIR = BASE_DIR+"/scripts"
@@ -391,23 +444,41 @@ def getRedirectLog(logs):
 
 def createJobs():
 
+    SELECTED_TOOLS = TOOLS
+
+    if TOOL_FILTER is not None:
+            filteredconfigs = []
+            for c in list(set(TOOL_FILTER.split(","))):
+                found = list(filter(lambda x: x.label.lower() == c.lower(), TOOLS))
+                if len(found) == 0:
+                    raise Exception("ERROR: cannot find the specified tool: "+c)
+                filteredconfigs.extend(found)
+            SELECTED_TOOLS = filteredconfigs
+
     port = BASE_SEED
     # 1 for SUT,  1 for JaCoCo TCP server and 1 optional for auth server
     delta = 3
+    n = 0
 
     for sut in SUTS:
 
         createScriptForBase(sut, port)
+        n = n + 1
         port = port + delta
 
         for seed in range(MIN_SEED, MAX_SEED + 1):
 
-            for tool in TOOLS:
+            for tool in SELECTED_TOOLS:
 
                 createScriptForTool(tool, sut, port, seed)
+                n = n + 1
                 # TODO decide how to handle generated tests, besides Python
                 # createPythonTestRunner(tool,sut, port)
                 port = port + delta
+
+    print("Number of used SUTs: " + str(len(SUTS)))
+    print("Number of used tools: " + str(len(SELECTED_TOOLS)))
+    print("Total number of experiment scripts: " + str(n))
 
 
 def getTestDir(tool_label,sut_name,port):

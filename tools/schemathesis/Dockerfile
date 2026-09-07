@@ -1,17 +1,17 @@
 FROM python:3.14-slim
 
-RUN pip install --no-cache-dir schemathesis==4.25.2
-
-# https://schemathesis.readthedocs.io/en/stable/reference/cli/
-# no timeout option? but has something related named "--max-examples"
+RUN pip install --no-cache-dir schemathesis==4.26.1
 
 ENTRYPOINT ["/bin/sh", "-c", \
     "schemathesis run  \
     ${SCHEMA_FILE_PATH} \
     --continue-on-failure  \
-    --url http://${HOST}:${PORT} \
+    --origin http://${HOST}:${PORT} \
+    --max-time ${TIME_SECONDS} \
     --report-dir ${OUTPUT_FOLDER} \
+    --no-shrink \
+    --suppress-health-check all \
+    ${AUTH_FILE_PATH:+--auth-wfc} ${AUTH_FILE_PATH} \
     ${EXTRA_CONFIGS} \
     " \
 ]
-

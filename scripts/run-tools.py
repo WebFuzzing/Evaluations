@@ -373,15 +373,17 @@ def getScriptFooter(port,tool_label,sut, exec_dir, jacoco_dir):
     s += "  " + getRedirectLog(getLogFile("shutdown",tool_label,sut.name,port)) +"\n"
     s += "\n\n"
 
-    s += "sleep 30\n"
-    s += "docker network rm "+ id+"_default "
-    s += "  " + getRedirectLog(getLogFile("shutdown",tool_label,sut.name,port)) +"\n"
-    s += "\n\n"
+    s += "sleep 30\n\n"
 
-    # this is the name of build images of SUT inside Docker-Compose
-    s += "docker rmi -f "+ id+"-sut-"+sut.name+" "
+    s += "docker-compose --project-name" +  id + " -f $SUT rm -f"
     s += "  " + getRedirectLog(getLogFile("shutdown",tool_label,sut.name,port)) +"\n"
     s += "\n"
+
+    s += "docker network rm "+ id+"_default "
+    s += "  " + getRedirectLog(getLogFile("shutdown",tool_label,sut.name,port)) +"\n"
+    s += "\n"
+    s += "\n"
+
 
     jacoco_docker = "/resultsJacoco"
 

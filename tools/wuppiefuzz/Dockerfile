@@ -6,12 +6,12 @@ RUN curl --proto '=https' --tlsv1.2 -LsSf https://github.com/TNO-S3/WuppieFuzz/r
 
 ENTRYPOINT ["/bin/sh", "-c", \
     "mkdir -p $OUTPUT_FOLDER \
-     && cd $OUTPUT_FOLDER \
+     && ln -s $OUTPUT_FOLDER reports \
      && wuppiefuzz fuzz  \
         ${SCHEMA_FILE_PATH} \
         --target http://${HOST}:${PORT} \
         --timeout ${TIME_SECONDS} \
-        --report=false \
+        --report=true \
         ${AUTH_FILE_PATH:+--authentication} ${AUTH_FILE_PATH} \
         ${EXTRA_CONFIGS} \
     " \

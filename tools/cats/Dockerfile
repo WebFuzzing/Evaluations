@@ -1,6 +1,6 @@
 FROM amazoncorretto:25-jdk
 
-ARG VERSION=13.8.0
+ARG VERSION=14.0.0
 ARG TAR_FILE=/cats.tar.gz
 
 RUN yum install -y tar gzip && yum clean all
@@ -20,7 +20,9 @@ ENTRYPOINT ["/bin/sh", "-c", \
     --reportFormat JUNIT \
     --contract ${SCHEMA_FILE_PATH} \
     --skipReportingForSuccess \
+    --output ${OUTPUT_FOLDER} \
     --server http://${HOST}:${PORT} \
+    ${AUTH_FILE_PATH:+--wfcAuthName} ${AUTH_FILE_PATH} \
     ${EXTRA_CONFIGS} \
     " \
 ]

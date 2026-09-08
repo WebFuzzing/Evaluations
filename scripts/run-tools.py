@@ -375,7 +375,7 @@ def getScriptFooter(port,tool_label,sut, exec_dir, jacoco_dir):
 
     s += "sleep 30\n\n"
 
-    s += "docker-compose --project-name" +  id + " -f $SUT rm -f"
+    s += "docker-compose --project-name " +  id + " -f $SUT rm -f"
     s += "  " + getRedirectLog(getLogFile("shutdown",tool_label,sut.name,port)) +"\n"
     s += "\n"
 

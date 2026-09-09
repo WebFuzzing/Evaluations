@@ -26,7 +26,3 @@ ENTRYPOINT ["/bin/sh", "-c", \
     ${EXTRA_CONFIGS} \
     " \
 ]
-
-# TODO removed following for now, as generating 10s of GB of data
-#    --output ${OUTPUT_FOLDER} \
-#

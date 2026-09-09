@@ -1,6 +1,6 @@
 FROM rust:1.98
 
-ARG VERSION=1.6.0
+ARG VERSION=1.7.1
 
 RUN curl --proto '=https' --tlsv1.2 -LsSf https://github.com/TNO-S3/WuppieFuzz/releases/download/v${VERSION}/wuppiefuzz-installer.sh | sh
 

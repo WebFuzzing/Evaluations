@@ -1,6 +1,6 @@
 FROM python:3.14-slim
 
-RUN pip install --no-cache-dir schemathesis==4.26.1
+RUN pip install --no-cache-dir schemathesis==4.27.2
 
 ENTRYPOINT ["/bin/sh", "-c", \
     "schemathesis run  \
@@ -11,6 +11,7 @@ ENTRYPOINT ["/bin/sh", "-c", \
     --report-dir ${OUTPUT_FOLDER} \
     --no-shrink \
     --suppress-health-check all \
+    --report ndjson \
     ${AUTH_FILE_PATH:+--auth-wfc} ${AUTH_FILE_PATH} \
     ${EXTRA_CONFIGS} \
     " \

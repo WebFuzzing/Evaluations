@@ -12,6 +12,7 @@ ENTRYPOINT ["/bin/sh", "-c", \
     --no-shrink \
     --suppress-health-check all \
     --report ndjson \
+    --report-wfc-path ${OUTPUT_FOLDER}/report.json \
     ${AUTH_FILE_PATH:+--auth-wfc} ${AUTH_FILE_PATH} \
     ${EXTRA_CONFIGS} \
     " \

@@ -1,6 +1,6 @@
 FROM amazoncorretto:25-jdk
 
-ARG VERSION=15.0.1
+ARG VERSION=15.0.3
 ARG TAR_FILE=/cats.tar.gz
 
 RUN yum install -y tar gzip && yum clean all
@@ -19,6 +19,7 @@ ENTRYPOINT ["/bin/sh", "-c", \
     --output ${OUTPUT_FOLDER} \
     --server http://${HOST}:${PORT} \
     ${TIME_SECONDS:+--stopAfterTimeInSec} ${TIME_SECONDS} \
+    ${TIME_SECONDS:+--fillTimeBudget} \
     ${AUTH_FILE_PATH:+--wfcAuth} ${AUTH_FILE_PATH} \
     ${EXTRA_CONFIGS} \
     " \

@@ -418,8 +418,7 @@ def getDockerToolSetup(testdir,outputFolder,timeSeconds,host,port,sut,extra_conf
      s += " -v \""+testdir+"\":"+outputFolder + " \\\n"
      # schemas and auth configurations are mounted in :ro read-only
      s += " -v \"" + WFD_DIR + "/openapi\":" + schemasFolder + ":ro  \\\n"
-     # FIXME should add :ro after EM fix
-     s += " -v \"" + MODIFIED_AUTH + "/" + authFile + "\":" + authTarget + " \\\n"
+     s += " -v \"" + MODIFIED_AUTH + "/" + authFile + "\":" + authTarget + ":ro \\\n"
 
      # env variables
      s += " -e OUTPUT_FOLDER=\"" + outputFolder + "\" \\\n"

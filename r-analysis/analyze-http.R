@@ -181,9 +181,17 @@ collectEndpointInfo <- function(sut){
 
         path_item <- paths[[path_name]]
         for (method in names(path_item)) {
-          if (method %in% c("get", "post", "put", "delete", "patch", "head", "options", "trace")) {
+          if (method %in% c("get", "post", "put", "delete", "patch", "head", "options", "trace","query")) {
             endpoints <- c(endpoints, paste0(toupper(method),":",full_path))
+          } else if(method %in% c("summary","description","servers","parameters")){
+            # can ignore
+          } else if(method %in% c("additionalOperations","$ref")){
+            # TODO need to implement it, eventually
+            stop("MUST add support for ", method)
+          } else if(startsWith(method,"x-")){
+            # should ignore
           } else {
+            # If this happens, need to check if invalid schema (and skip specific value here), or if we did something wrong
             stop("Unrecognized method ", method)
           }
         }

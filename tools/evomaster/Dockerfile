@@ -1,4 +1,4 @@
-FROM webfuzzing/evomaster:v6.1.1
+FROM webfuzzing/evomaster:v6.2.0
 
 
 ENTRYPOINT ["/bin/sh", "-c", \

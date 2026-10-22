@@ -12,7 +12,7 @@ import subprocess
 import re
 
 # The version of Web Fuzzing Evaluations we are using in this study.
-WFE_VERSION = "0.0.2"
+WFE_VERSION = "0.0.3"
 
 # The version of Web Fuzzing Dataset we are using in this study.
 WFD_VERSION = "4.3.0"

@@ -79,16 +79,16 @@ Ties are solved with the average of the ranks.
 
 |Tools | %2xx | #500 | %Lines | Best-On | Overall | 
 |:---|---:|---:|---:|---:|---:| 
-|_aratrl_ | 13.7 (4.6) | 1.0 (4.0) | 23.1 (4.8) | 6 (3) | 4.1 | 
-|_cats_ | 18.1 (4.3) | 1.4 (4.1) | 26.7 (4.2) | 1 (4) | 4.1 | 
-|_evomaster_ | 54.5 (2.0) | 9.8 (2.6) | 45.4 (1.8) | 21 (2) | 2.1 | 
-|_restler_ | 24.2 (3.9) | 1.0 (4.3) | 28.3 (4.3) | 0 (6) | 4.5 | 
-|_schemathesis_ | __57.8 (1.8)__ | __9.0 (2.1)__ | __47.4 (1.5)__ | __39 (1)__ | __1.6__ | 
-|_wuppiefuzz_ | 17.3 (4.4) | 1.8 (3.9) | 25.9 (4.5) | 0 (6) | 4.6 | 
-
+|_aratrl_ | 19.4 (4.8) | 2.1 (4.3) | 23.7 (5.0) | 1 (5) | 4.8 | 
+|_cats_ | 50.3 (3.0) | 8.8 (3.1) | 41.2 (2.7) | 23 (2) | 2.7 | 
+|_evomaster_ | 57.6 (2.6) | 9.8 (3.4) | 43.6 (2.4) | 16 (3) | 2.9 | 
+|_restler_ | 26.0 (4.5) | 0.9 (4.8) | 26.5 (4.9) | 0 (6) | 5.0 | 
+|_schemathesis_ | __67.1 (2.1)__ | __22.8 (1.5)__ | __48.9 (1.9)__ | __77 (1)__ | __1.6__ | 
+|_wuppiefuzz_ | 29.6 (4.0) | 4.3 (3.8) | 29.6 (4.1) | 5 (4) | 4.0 | 
 
 ### Experiment Data
 
+* __0.0.3__, Oct'26 (R=3,T=10,K=55): [overall](data/26_10_23_3r_10m/overall.md), [2xx](data/26_10_23_3r_10m/comparisonAll2xx.md), [500](data/26_10_23_3r_10m/comparisonAll500.md), [lines](data/26_10_23_3r_10m/comparisonAllJaCoCo.md)
 * __0.0.2__, Sep'26 (R=3,T=2,K=36): [overall](data/26_09_09_3r_2m/overall.md), [2xx](data/26_09_09_3r_2m/comparisonAll2xx.md), [500](data/26_09_09_3r_2m/comparisonAll500.md), [lines](data/26_09_09_3r_2m/comparisonAllJaCoCo.md)
 * __0.0.1__, Aug'26 (R=3,T=2,K=36): [overall](data/26_08_3r_2m/overall.md), [2xx](data/26_08_3r_2m/comparisonAll2xx.md), [500](data/26_08_3r_2m/comparisonAll500.md), [lines](data/26_08_3r_2m/comparisonAllJaCoCo.md)
 

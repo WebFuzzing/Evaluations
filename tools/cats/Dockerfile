@@ -1,6 +1,6 @@
 FROM amazoncorretto:25-jdk
 
-ARG VERSION=15.0.3
+ARG VERSION=15.1.3
 ARG TAR_FILE=/cats.tar.gz
 
 RUN yum install -y tar gzip && yum clean all
@@ -13,9 +13,8 @@ ENTRYPOINT ["/bin/sh", "-c", \
     "java  \
     -jar /cats.jar \
     --blackbox \
-    --reportFormat JUNIT \
+    --reportFormat WFC_REPORT \
     --contract ${SCHEMA_FILE_PATH} \
-    --skipReportingForSuccess \
     --output ${OUTPUT_FOLDER} \
     --server http://${HOST}:${PORT} \
     ${TIME_SECONDS:+--stopAfterTimeInSec} ${TIME_SECONDS} \

@@ -1,6 +1,6 @@
 FROM amazoncorretto:25-jdk
 
-ARG VERSION=15.5.0
+ARG VERSION=15.6.0
 ARG TAR_FILE=/cats.tar.gz
 
 RUN yum install -y tar gzip && yum clean all
@@ -12,7 +12,6 @@ RUN tar -xzf ${TAR_FILE} -C / && rm ${TAR_FILE}
 ENTRYPOINT ["/bin/sh", "-c", \
     "java  \
     -jar /cats.jar \
-    --blackbox \
     --reportFormat WFC_REPORT \
     --contract ${SCHEMA_FILE_PATH} \
     --output ${OUTPUT_FOLDER} \

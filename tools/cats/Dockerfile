@@ -1,6 +1,6 @@
 FROM amazoncorretto:25-jdk
 
-ARG VERSION=15.5.0
+ARG VERSION=15.6.0
 ARG TAR_FILE=/cats.tar.gz
 
 RUN yum install -y tar gzip && yum clean all

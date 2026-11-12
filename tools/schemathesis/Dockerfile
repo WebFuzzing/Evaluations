@@ -1,6 +1,6 @@
 FROM python:3.14-slim
 
-RUN pip install --no-cache-dir schemathesis==4.32.7
+RUN pip install --no-cache-dir schemathesis==4.33.4
 
 ENTRYPOINT ["/bin/sh", "-c", \
     "schemathesis run  \

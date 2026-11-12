@@ -634,10 +634,10 @@ install_WFD()
 #
 # tools to use. comment out the ones which should not be used for these experiments
 TOOLS = [
-    Tool("aratrl","aratrl",""),
+#     Tool("aratrl","aratrl",""),
     Tool("cats","cats",""),
     Tool("evomaster","evomaster",""),
-    Tool("restler","restler",""),
+#     Tool("restler","restler",""),
     Tool("schemathesis","schemathesis",""),
     Tool("wuppiefuzz","wuppiefuzz","")
 ]

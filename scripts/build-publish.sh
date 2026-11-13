@@ -12,12 +12,14 @@ WFE_VERSION="0.1.0"
 # Prefix use to determine the Docker images of the tools published in WFE
 TOOL_NAME_PREFIX="wfe"
 
-docker push webfuzzing/$TOOL_NAME_PREFIX-aratrl:$WFE_VERSION
-docker push webfuzzing/$TOOL_NAME_PREFIX-cats:$WFE_VERSION
-docker push webfuzzing/$TOOL_NAME_PREFIX-evomaster:$WFE_VERSION
-docker push webfuzzing/$TOOL_NAME_PREFIX-restler:$WFE_VERSION
-docker push webfuzzing/$TOOL_NAME_PREFIX-schemathesis:$WFE_VERSION
-docker push webfuzzing/$TOOL_NAME_PREFIX-wuppiefuzz:$WFE_VERSION
+BASE="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+
+tools=("aratrl" "cats" "evomaster" "restler" "schemathesis" "wuppiefuzz")
+
+for tool in "${tools[@]}"; do
+    docker buildx build --platform linux/amd64,linux/arm64 -t "webfuzzing/$TOOL_NAME_PREFIX-$tool:$WFE_VERSION"   --push  $BASE/../tools/$tool
+done
+
 
 ### If all worked with no error, should be able to see new images at:
 ### https://hub.docker.com/u/webfuzzing

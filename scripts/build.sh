@@ -4,7 +4,7 @@
 set -e
 
 # The version of Web Fuzzing Evaluations we are using in this study.
-WFE_VERSION="0.0.3"
+WFE_VERSION="0.1.0"
 # Prefix use to determine the Docker images of the tools published in WFE
 TOOL_NAME_PREFIX="wfe"
 

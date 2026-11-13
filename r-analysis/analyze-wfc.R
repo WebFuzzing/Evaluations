@@ -327,9 +327,12 @@ toolLabel <- function(id, format){
 # --- count the number of distinct SUT values for which there is at least one T'code' entry being non-zero
 # In these rows, X represents the agregated sum of the average number of faults of type 'code', whereas Y is the number of
 # SUTs for which at least one fault was found at least once.
-# After a horizontal midline, the last row should contain the length/size N of CATEGORIES$id for the column Category
-# (starting with 'Total: N').
-# The column Code can have its value empty, whereas each other column should be the sum of the X values. Ignore Y in this last row.
+# After a horizontal midline, the last row should contain:
+# - the length/size N of CATEGORIES$id for the column Category (starting with 'Total: N').
+# - the column Code can have its value empty,
+# - each other column should be the sum of the X values followed by [Z], eg, '234 [13]'. Ignore Y in this last row.
+#   The value Z is the number of disting ids for that column that have a non-zero X value.
+#   In other words, Z represents the number of fault categories for which at least one fault was found with that tool.
 # When outputting the table in Latex, every second row should be in grey.
 multiToolFaultComparison <- function(
   dataFilePath, # the OS path where the CSV file containing the data is stored
@@ -347,8 +350,13 @@ multiToolFaultComparison <- function(
   categories <- CATEGORIES[order(CATEGORIES$code), ]
   tools <- sort(unique(dt$TOOL))
 
-  escapeLabel <- function(s, format){
-    gsub("_", "\\_", s, fixed = TRUE)
+  formatCategoryLabel <- function(id, format){
+    escaped <- gsub("_", "\\_", id, fixed = TRUE)
+    if(format == TEX){
+      paste0("\\emph{", escaped, "}")
+    } else {
+      paste0("_", escaped, "_")
+    }
   }
 
   computeCell <- function(tool, code){
@@ -395,19 +403,22 @@ multiToolFaultComparison <- function(
     }
 
     totals <- rep(0, length(tools))
+    # Z: number of categories for which tool has a non-zero X
+    nonZeroCounts <- rep(0, length(tools))
 
     for(j in 1:nrow(categories)){
       id   <- categories$id[j]
       code <- categories$code[j]
 
       if(format == TEX){
+        # grey every second row
         if(j %% 2 == 0){
           cat("\\rowcolor{gray!30} ")
         }
-        cat("\\emph{", escapeLabel(id, format), "}", sep = "")
+        cat(formatCategoryLabel(id, format), sep = "")
       }
       if(format == MD){
-        cat("| _", escapeLabel(id, format), "_", sep = "")
+        cat("| ", formatCategoryLabel(id, format), sep = "")
       }
 
       # Code column
@@ -426,6 +437,9 @@ multiToolFaultComparison <- function(
         cat(" (", cell$y, ")", sep = "")
 
         totals[i] <- totals[i] + cell$x
+        if(cell$x != 0){
+          nonZeroCounts[i] <- nonZeroCounts[i] + 1
+        }
       }
 
       if(format == TEX) cat(" \\\\ \n")
@@ -437,6 +451,7 @@ multiToolFaultComparison <- function(
     if(format == TEX) cat("Total: ", nrow(categories), sep = "")
     if(format == MD)  cat("| __Total: ", nrow(categories), "__", sep = "")
 
+    # empty Code cell in the summary row
     if(format == TEX) cat(" & ")
     if(format == MD)  cat(" | ")
 
@@ -444,6 +459,7 @@ multiToolFaultComparison <- function(
       if(format == TEX) cat(" & ")
       if(format == MD)  cat(" | ")
       cat(formatC(totals[i], digits = 1, format = "f"))
+      cat(" [", nonZeroCounts[i], "]", sep = "")
     }
 
     if(format == TEX) cat(" \\\\ \n")

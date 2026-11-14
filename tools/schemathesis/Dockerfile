@@ -11,9 +11,12 @@ ENTRYPOINT ["/bin/sh", "-c", \
     --report-dir ${OUTPUT_FOLDER} \
     --no-shrink \
     --suppress-health-check all \
-    --report ndjson \
     --report-wfc-path ${OUTPUT_FOLDER}/report.json \
     ${AUTH_FILE_PATH:+--auth-wfc} ${AUTH_FILE_PATH} \
     ${EXTRA_CONFIGS} \
     " \
 ]
+
+## NOTE: temporarely removed it, due to huge amount of space used. Need to discuss a viable solution (eg off by default
+##       with a DEBUG mode to activate it). Can still pass it via EXTRA_CONFIGS
+#--report ndjson \

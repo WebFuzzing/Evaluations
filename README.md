@@ -75,19 +75,22 @@ Rank 1 is best, whereas rank `Z` is for the worst performance.
 In the table results, ranks are shown in `()` parentheses. 
 Ties are solved with the average of the ranks. 
 
+For each fuzzer, we also keep track of all the different types of faults they found, if those are reported with [WFC format](https://github.com/WebFuzzing/Commons).
+However, as those values are self-reported by each fuzzer, particular care needs to be taken when comparing results.
+
 ### Latest Result Summary
 
 |Tools | %2xx | #500 | %Lines | Best-On | Overall | 
-|:---|---:|---:|---:|---:|---:| 
-|_aratrl_ | 19.4 (4.8) | 2.1 (4.3) | 23.7 (5.0) | 1 (5) | 4.8 | 
-|_cats_ | 50.3 (3.0) | 8.8 (3.1) | 41.2 (2.7) | 23 (2) | 2.7 | 
-|_evomaster_ | 57.6 (2.6) | 9.8 (3.4) | 43.6 (2.4) | 16 (3) | 2.9 | 
-|_restler_ | 26.0 (4.5) | 0.9 (4.8) | 26.5 (4.9) | 0 (6) | 5.0 | 
-|_schemathesis_ | __67.1 (2.1)__ | __22.8 (1.5)__ | __48.9 (1.9)__ | __77 (1)__ | __1.6__ | 
-|_wuppiefuzz_ | 29.6 (4.0) | 4.3 (3.8) | 29.6 (4.1) | 5 (4) | 4.0 | 
+|:---|---:|---:|---:|---:|---:|
+|_cats_ | __72.6 (1.9)__ | __35.3 (1.6)__ | __50.4 (1.8)__ | __57 (1)__ | __1.6__ | 
+|_evomaster_ | 58.2 (2.6) | 14.4 (3.2) | 43.7 (2.7) | 13 (3) | 2.9 | 
+|_schemathesis_ | 69.3 (2.0) | 29.1 (1.7) | 49.7 (1.9) | 36 (2) | 1.9 | 
+|_wuppiefuzz_ | 29.9 (3.5) | 4.4 (3.5) | 29.6 (3.7) | 1 (4) | 3.7 | 
+
 
 ### Experiment Data
 
+* __0.1.0__, Nov'26 (R=10,T=10,K=56): [overall](data/26_11_16_10r_10m/overall.md), [2xx](data/26_11_16_10r_10m/comparisonAll2xx.md), [500](data/26_11_16_10r_10m/comparisonAll500.md), [lines](data/26_11_16_10r_10m/comparisonAllJaCoCo.md), [faults](data/26_11_16_10r_10m/comparisonFaults.md)
 * __0.0.3__, Oct'26 (R=3,T=10,K=55): [overall](data/26_10_23_3r_10m/overall.md), [2xx](data/26_10_23_3r_10m/comparisonAll2xx.md), [500](data/26_10_23_3r_10m/comparisonAll500.md), [lines](data/26_10_23_3r_10m/comparisonAllJaCoCo.md)
 * __0.0.2__, Sep'26 (R=3,T=2,K=36): [overall](data/26_09_09_3r_2m/overall.md), [2xx](data/26_09_09_3r_2m/comparisonAll2xx.md), [500](data/26_09_09_3r_2m/comparisonAll500.md), [lines](data/26_09_09_3r_2m/comparisonAllJaCoCo.md)
 * __0.0.1__, Aug'26 (R=3,T=2,K=36): [overall](data/26_08_3r_2m/overall.md), [2xx](data/26_08_3r_2m/comparisonAll2xx.md), [500](data/26_08_3r_2m/comparisonAll500.md), [lines](data/26_08_3r_2m/comparisonAllJaCoCo.md)

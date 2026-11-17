@@ -2,7 +2,7 @@
 
 The current repository contains scripts to run experiments with different REST API fuzzers on the [Web Fuzzing Dataset (WFD)](https://github.com/WebFuzzing/Dataset), using different fuzzers. 
 
-To use this repository, you only need _Python_ and _Docker_. 
+To use this repository, you only need _Python_ and _Docker_ (and _R_ if you want to run the automated result analyses). 
 Nothing else needs to be manually installed, as everything (including WFD and the fuzzers) have already been published and can be run via Docker.
 
 ## Included APIs and Fuzzers

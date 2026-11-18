@@ -12,6 +12,7 @@ RUN tar -xzf ${TAR_FILE} -C / && rm ${TAR_FILE}
 ENTRYPOINT ["/bin/sh", "-c", \
     "java  \
     -jar /cats.jar \
+    --srs --srw \
     --reportFormat WFC_REPORT \
     --contract ${SCHEMA_FILE_PATH} \
     --output ${OUTPUT_FOLDER} \

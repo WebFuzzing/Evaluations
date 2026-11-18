@@ -7,7 +7,7 @@ Nothing else needs to be manually installed, as everything (including WFD and th
 
 ## Included APIs and Fuzzers
 
-Current version 4.4.0 of [WFD](https://github.com/WebFuzzing/Dataset) includes 56 APIs. 
+Current version 4.4.1 of [WFD](https://github.com/WebFuzzing/Dataset) includes 56 APIs. 
 
 The fuzzers currently configured here in WFE are (in alphabetic order):
 
@@ -80,14 +80,14 @@ However, as those values are self-reported by each fuzzer, particular care needs
 
 |Tools | %2xx | #500 | %Lines | Best-On | Overall | 
 |:---|---:|---:|---:|---:|---:|
-|_cats_ | __72.6 (1.9)__ | __35.3 (1.6)__ | __50.4 (1.8)__ | __57 (1)__ | __1.6__ | 
-|_evomaster_ | 58.2 (2.6) | 14.4 (3.2) | 43.7 (2.7) | 13 (3) | 2.9 | 
-|_schemathesis_ | 69.3 (2.0) | 29.1 (1.7) | 49.7 (1.9) | 36 (2) | 1.9 | 
-|_wuppiefuzz_ | 29.9 (3.5) | 4.4 (3.5) | 29.6 (3.7) | 1 (4) | 3.7 | 
-
+|_cats_ | __72.4 (1.9)__ | __34.3 (1.7)__ | __50.0 (1.8)__ | __59 (1)__ | __1.6__ | 
+|_evomaster_ | 58.5 (2.6) | 14.0 (3.1) | 43.6 (2.7) | 13 (3) | 2.9 | 
+|_schemathesis_ | 69.5 (2.0) | 28.2 (1.7) | 49.4 (1.9) | 38 (2) | 1.9 | 
+|_wuppiefuzz_ | 31.0 (3.5) | 4.3 (3.5) | 30.0 (3.7) | 2 (4) | 3.7 | 
 
 ### Experiment Data
 
+* __0.1.1__, Nov'26 (R=10,T=10,K=56): [overall](data/26_11_18_10r_10m/overall.md), [2xx](data/26_11_18_10r_10m/comparisonAll2xx.md), [500](data/26_11_18_10r_10m/comparisonAll500.md), [lines](data/26_11_18_10r_10m/comparisonAllJaCoCo.md), [faults](data/26_11_18_10r_10m/comparisonFaults.md)
 * __0.1.0__, Nov'26 (R=10,T=10,K=56): [overall](data/26_11_16_10r_10m/overall.md), [2xx](data/26_11_16_10r_10m/comparisonAll2xx.md), [500](data/26_11_16_10r_10m/comparisonAll500.md), [lines](data/26_11_16_10r_10m/comparisonAllJaCoCo.md), [faults](data/26_11_16_10r_10m/comparisonFaults.md)
 * __0.0.3__, Oct'26 (R=3,T=10,K=55): [overall](data/26_10_23_3r_10m/overall.md), [2xx](data/26_10_23_3r_10m/comparisonAll2xx.md), [500](data/26_10_23_3r_10m/comparisonAll500.md), [lines](data/26_10_23_3r_10m/comparisonAllJaCoCo.md)
 * __0.0.2__, Sep'26 (R=3,T=2,K=36): [overall](data/26_09_09_3r_2m/overall.md), [2xx](data/26_09_09_3r_2m/comparisonAll2xx.md), [500](data/26_09_09_3r_2m/comparisonAll500.md), [lines](data/26_09_09_3r_2m/comparisonAllJaCoCo.md)

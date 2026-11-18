@@ -15,7 +15,7 @@ import re
 WFE_VERSION = "0.1.0"
 
 # The version of Web Fuzzing Dataset we are using in this study.
-WFD_VERSION = "v4.4.0"
+WFD_VERSION = "v4.4.1"
 
 
 # Prefix use to determine the Docker images of the tools published in WFE

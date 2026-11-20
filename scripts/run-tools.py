@@ -29,6 +29,7 @@ DOCKER_OUTPUT_FOLDER = "/output"
 ### Named optional parameters
 LABEL_tools = "tools"
 LABEL_suts = "suts"
+LABEL_debug = "debug"
 LABELS = [LABEL_tools,LABEL_suts]
 
 N_PARAMS = 5
@@ -72,14 +73,29 @@ TOOL_FILTER = None
 # Default is None
 SUT_FILTER = None
 
+# Run the tools in "debug" mode. This depends from tool to tool.
+# Typically, more data is generated as output
+DEBUG=False
 
 ### Derived named variables ###
 if len(sys.argv) > N_PARAMS:
-    # There might be better ways to build such map in Python...
-    options = sys.argv[N_PARAMS:len(sys.argv)]
-    keys   = [x.lower() for x in list(map(lambda z: z.split("=")[0], options))]
-    values = list(map(lambda z: z.split("=")[1], options))
-    kv = dict(zip(keys,values))
+    options = sys.argv[N_PARAMS:]
+
+    kv = {}
+    for opt in options:
+        key, sep, val = opt.partition("=")
+        key = key.lower()
+
+        if key == LABEL_debug:
+            if sep:
+                raise SystemExit(f"Option '{LABEL_debug}' must not have a value (got {opt!r})")
+            DEBUG = True
+            continue
+
+        if not sep:
+            raise SystemExit(f"Option '{opt}' must be of the form key=value")
+
+        kv[key] = val
 
     if LABEL_tools in kv:
         TOOL_FILTER = kv[LABEL_tools]
@@ -486,6 +502,9 @@ def getDockerToolSetup(testdir,outputFolder,timeSeconds,host,port,sut,extra_conf
 
      if sut.auth:
         s += " -e AUTH_FILE_PATH=\"" + authTarget + "\" \\\n"
+
+     if DEBUG:
+         s += " -e DEBUG=\"DEBUG\" \\\n"
 
      return s
 

@@ -12,7 +12,6 @@ RUN tar -xzf ${TAR_FILE} -C / && rm ${TAR_FILE}
 ENTRYPOINT ["/bin/sh", "-c", \
     "java  \
     -jar /cats.jar \
-    --srs --srw \
     --reportFormat WFC_REPORT \
     --contract ${SCHEMA_FILE_PATH} \
     --output ${OUTPUT_FOLDER} \
@@ -20,6 +19,7 @@ ENTRYPOINT ["/bin/sh", "-c", \
     ${TIME_SECONDS:+--stopAfterTimeInSec} ${TIME_SECONDS} \
     ${TIME_SECONDS:+--fillTimeBudget} \
     ${AUTH_FILE_PATH:+--wfcAuth} ${AUTH_FILE_PATH} \
+    $(if [ -z \"${DEBUG}\" ]; then echo '--srs --srw'; fi) \
     ${EXTRA_CONFIGS} \
     " \
 ]

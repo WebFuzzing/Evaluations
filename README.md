@@ -115,6 +115,7 @@ Those are:
 * __TIME_SECONDS__: for how long the fuzzer is expected to run. Note that experiments will automatically have a grace period (e.g., 1 minute) before forcing a termination if the Docker container of the fuzzer is still running after that amount of time. 
 * __OUTPUT_FOLDER__: where to save the results of the fuzzing (e.g., any generated test case). Such folder is automatically mounted in the Docker image, so that results can then be accessed under `<dir>/tests` once the experiments are finished. 
 * __AUTH_FILE_PATH__: location of authentication information, in [WFC format](https://github.com/WebFuzzing/Commons), if the API requires it (if not, this will be empty).
+* __DEBUG__: if this environment variable is set (e.g., by passing `debug` as input to `run-tools.py`), the tool is allowed to generate as much data as it wants inside OUTPUT_FOLDER. Otherwise, the experiment scaffolding might automatically delete too large generated folders.  
 * __EXTRA_CONFIGS__: any extra custom parameter, that needs to be manually set up in `scripts/run-tools.py`. This is only used when debugging different configurations of a fuzzer without the need of rebuilding the Docker images.  
 
 

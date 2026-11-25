@@ -18,6 +18,15 @@ The fuzzers currently configured here in WFE are (in alphabetic order):
 * [Schemathesis](https://github.com/schemathesis/schemathesis)
 * [WuppieFuzz](https://github.com/TNO-S3/WuppieFuzz)
 
+
+## Citation
+
+If you are using WFE in an academic work, you can cite the following:
+
+> Omur Sahin, Man Zhang, Dmitry Dygalo, Madalin Ilie, Thomas Rooijakkers, Erieke Weitenberg, Andrea Arcuri.
+> **Web Fuzzing Commons, Dataset, Guidelines and Evaluations to Support Experimentation in REST API Fuzzing**.
+> [arxiv 2509.01612](https://arxiv.org/abs/2509.01612)
+
 ## Running Experiments
 
 You can run following Python script:
